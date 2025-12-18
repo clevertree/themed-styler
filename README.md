@@ -1,6 +1,6 @@
 # themed-styler
 
-Client-side runtime styling engine for web and React Native with theme support and Tailwind-style utility classes defined in themes. It stores theme-aware selector styles using CSS property names, tracks which selectors/classes are actually used, and can output either:
+Client-side runtime styling engine for web and React Native with theme support and Tailwind-style utility classes defined in themes. It stores theme-aware selector styles using CSS property names and, at render time, infers which rules to emit from observed usage (tags, classes, and tag+class pairs). It can output either:
 
 - Web CSS for currently-used selectors/classes
 - React Native style objects for a selector combined with Tailwind-like utility classes
@@ -16,7 +16,7 @@ This crate is designed to be embedded in clients or tooling. A CLI wrapper is av
 - Output:
   - Web: flat CSS string for currently used selectors/classes
   - React Native: camelCased style object with basic unit conversion (e.g., "8px" → 8)
-- Tracks used selectors/classes so only in-DOM styles get emitted
+- Render-time inference of usage (no exact-string selector tracking): emits rules for observed tags, classes, and tag+class pairs without deep hierarchy selectors
 
 ## Quick start (Rust)
 
@@ -27,8 +27,10 @@ use indexmap::IndexMap;
 // 1) Start with a default state
 let mut st = State::new_default();
 
-// 2) Register what is currently used in your app
-st.register_selectors(["body".to_string(), "button".to_string()]);
+// 2) Register what is currently used in your app (structured usage)
+st.register_tags(["body".to_string(), "button".to_string()]);
+st.register_tailwind_classes(["p-2".to_string()]);
+st.register_tag_class("h1", "text-sm");
 
 // 3) Emit CSS for the web
 let css = st.css_for_web();
@@ -67,7 +69,7 @@ Newly supported dynamic utilities (generated at runtime if not present in the th
   - Fractions: w-1/2 ⇒ width: 50%
   - Tokens: w-full (100%), w-screen (100vw), w-px (1px); min/max variants mirror the same mapping
 
-Display, flex, hover, and breakpoints (new)
+Display, flex, hover, and breakpoints
 
 - Display: block, inline-block, inline, inline-flex, grid, hidden
 - Flex: flex, flex-row, flex-col, flex-1; alignment helpers items-*, justify-*
@@ -84,7 +86,7 @@ Notes:
 
 - The default state is defined in YAML and bundled with the crate: crates/themed-styler/theme.yaml.
 - Each theme entry contains selectors, variables, and breakpoints, plus an optional inherits pointing to a parent theme.
-- Inheritance merges child → parent(s) → default, with parent overriding child on conflicts. This means default can define the canonical utility classes and common selectors, while other themes only specify overrides.
+- Inheritance merges default → parent(s) → child, with the child overriding parent/default on conflicts. This lets the default define canonical utility classes and common selectors, while other themes only specify overrides.
 
 Example (YAML):
 
@@ -114,7 +116,7 @@ On load and theme switch, themed-styler computes effective selectors, variables,
 ### Variables and breakpoints (per-theme)
 
 - Variables and breakpoints live inside each theme under variables and breakpoints.
-- Resolution order for variables: legacy global variables (lowest) → current theme variables → parents (via inherits) → default theme variables (highest). Breakpoints follow the same order.
+- Resolution order for variables: legacy global variables (lowest) → default theme variables → parent theme variables (via inherits chain) → current theme variables (highest). Breakpoints follow the same order.
 - React Native output resolves var tokens too. Supported syntaxes: var(--name), var(name), and $name.
 
 Example YAML (variables and breakpoints):
@@ -177,21 +179,22 @@ State can be serialized/deserialized for tooling. Internally the crate uses Serd
   },
   "default_theme": "default",
   "current_theme": "default",
-  "used_selectors": ["body", "button"],
-  "used_classes": ["p-2", "hover:mx-1"]
+  "used_tags": ["body", "button"],
+  "used_classes": ["p-2", "hover:mx-1"],
+  "used_tag_classes": ["h1|text-sm"]
 }
 ```
 
 ## Status & next steps
 
-- **Core theme storage & usage tracking:** `State` already captures selectors/styles per theme with `dark`/`light` defaults and allows `register_selectors`, but the runtime client/global-context wiring described in the requirements still needs the createElement wrapper/hooks to keep the state in sync with components that render and unmount.
+- **Core theme storage & usage tracking:** `State` captures selectors/styles per theme with `dark`/`light` defaults and now records structured runtime usage via `register_tags`, `register_tailwind_classes`, and `register_tag_class`. The runtime wrappers keep the state in sync with components that render and unmount.
 - **Theme overrides, variables, and breakpoints:** CLI helpers (`add_theme`, `set_vars`, `set_bps`, `set_theme`) are in place, yet we still need a shared theme file that exposes the `default/dark/light` combinations and gives consumers a place to override selectors before the runtime or tooling reads them.
-- **Web CSS & RN output:** `css_for_web` and `rn_styles_for` (plus the CLI `style css`/`style rn` commands) already handle selected selectors and Tailwind utilities, but the RN conversion needs to be wired into the React Native runtime wrapper so selectors in the tree can query the instantiated styles directly.
+- **Web CSS & RN output:** `css_for_web` and `rn_styles_for` (plus the CLI `style css`/`style rn` commands) infer emission at render time from observed tags/classes/tag+class pairs. No exact-string `used_selectors` filtering is required.
 - **Runtime Tailwind support:** Tailwind utilities are theme-defined (no whitelist). The default YAML includes a minimal set (e.g., `.p-2`, `.hover\:mx-1:hover`) and apps can add more in their themes.
-- **Client-web stylesheet updates:** Not yet implemented; the requirement to repaint or replace the global stylesheet whenever DOM selectors/classes change (and to avoid loading unused styles) remains outstanding and will need a global style manager on the web side that reacts to runtime selector registration.
+- **Client-web stylesheet updates:** The web side should repaint or replace the global stylesheet whenever observed usage changes. A global style manager should call `css_for_web()` after render to update a single <style> tag.
 - **Tailwind/nativewind removal & custom wrapper:** The web and RN clients still ship with their existing Tailwind stylesheets and nativewind wiring. We need to delete `index.css`/`globals.css` and any Tailwind/nativewind references, then rewire both apps to use the themed-styler binary via the custom styled wrapper.
 - **Example theme file & hooks:** While `State::new_default` provides in-memory defaults, there is no filesystem example that can be shared with the template repo. We should add a JSON theme file (with `default` aliasing `dark`, plus explicit `dark` and `light`) and refactor `template-ui/theme.js` to use the new hooks to set selectors/themes/values instead of the old boilerplate.
-- **React Native selectors:** The backend supports selector registration, but we still need to capture the actual string tag names from `createElement` (or a wrapper) so selectors like `View[type=primary]` stay accurate in React Native.
+- **React Native selectors:** The backend supports selector registration; wrappers should capture the intended tag string used in themes (e.g., `div`, `span`, `h1`) so cross-platform selectors like `div.primary` remain coherent.
 - **CLI commands & tests:** The CLI already exposes `style init`, `register-selectors`, `register-classes`, `css`, and `rn`, but the requirements also expect exposing theme/variables/breakpoint updates and tailored outputs for selectors. We need new unit tests that exercise `set-theme`, `add-theme`, `set-vars`, etc., to ensure the commands manipulate the state as expected.
 - **Tailwind CSS files:** Legacy Tailwind CSS imports should be removed from clients; runtime styling comes from themed-styler + theme utilities.
 
@@ -201,7 +204,7 @@ A default YAML state is bundled at `crates/themed-styler/theme.yaml` and loaded 
 
 Notes about selectors and HTML tag usage
 - Use HTML tags for all selectors in themes (for example `div`, `button`, `h1`). The React Native app will render JSX `div` into a styled native `View` at runtime, so keeping HTML tags in themes makes selector logic identical between web and RN.
-- The runtime and CLI accept class selectors such as `.myClass` or combined selectors like `div.myClass` (these are stored as literal selector keys in theme objects). Ensure your components emit matching selector strings when registering usage.
+- Themes store selectors as literal keys (e.g., `h1`, `.text-sm`, `h1.text-sm`). At runtime, the engine observes tags/classes and infers matches: a usage of `h1.text-sm` implies both `h1` and `.text-sm` are eligible for emission.
 
 Runtime integration (overview)
 - The next step is adding a small createElement wrapper / hooks in the template/client apps that:
@@ -263,17 +266,7 @@ Notes:
 - The wrapper passes the same tag string (default 'div', or via `tag` prop) to `registerUsage` so selectors like `div.myClass` can match across web and RN.
 - Only wrapped elements are registered; this prevents over-collecting and keeps the emitted stylesheet minimal.
 
-Hierarchy tracking and selector generation
------------------------------------------
+Hierarchy selectors
+-------------------
 
-The `TSDiv` wrapper also tracks a lightweight hierarchy of wrapped nodes and their classes. When present, the runtime bridge accepts a third `hierarchy` argument: an array of nodes from the root down to the current node where each node is `{ tag: string, classes?: string[] }`.
-
-Providing the hierarchy enables the themed-styler bridge to emit additional descendant selectors to improve specificity and reduce accidental matches. Examples of selectors that may be generated when a node with `tag='button'` and class `['primary']` is nested under an ancestor `div` with class `['card']` include:
-
-- `div button`
-- `div button.primary`
-- `.card button`
-- `.card button.primary`
-- `.card .primary`
-
-The bridge will not emit direct-child (`>`) selectors; only descendant relationships are used. If the hierarchy argument is omitted, the bridge keeps the previous (lighter-weight) behavior and only registers the element's tag and classes themselves (e.g., `button`, `.primary`, `button.primary`).
+Deep descendant selectors (e.g., `div div div span`) are not generated. Emission is based on tags, classes, and tag+class pairs only. This keeps CSS lightweight, decoupled from DOM depth, and easier to override.

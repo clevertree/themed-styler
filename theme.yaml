@@ -141,20 +141,20 @@ themes:
           margin-left: "1.25rem"
           margin-bottom: "1rem"
 
-        blockquote:
-          border-left: "4px solid var(primary)"
-          padding-left: "1rem"
+          blockquote:
+            border-left: "4px solid var(color.primary)"
+            padding-left: "1rem"
 
         code:
-          background-color: "var(bg)"
-          border: "1px solid var(border)"
+          background-color: "var(color.bg)"
+          border: "1px solid var(color.border)"
           border-radius: "0.5rem"
           padding: "0.2rem 0.4rem"
           font-family: "'JetBrains Mono', 'Fira Code', Consolas, monospace"
 
         pre:
-          background-color: "var(bg)"
-          border: "1px solid var(border)"
+          background-color: "var(color.bg)"
+          border: "1px solid var(color.border)"
           border-radius: "0.75rem"
           padding: "1rem"
           overflow-x: auto
@@ -165,27 +165,28 @@ themes:
           margin-bottom: "1rem"
 
         "td, th":
-          border: "1px solid var(border)"
+          border: "1px solid var(color.border)"
           padding: "0.75rem"
 
         th:
-          background-color: "var(surface)"
+          background-color: "var(color.surface)"
           font-weight: 600
 
         hr:
           border: 0
           height: "1px"
-          background-color: "var(border)"
+          background-color: "var(color.border)"
           margin: "2rem 0"
     variables:
-      text: "#111b26"
-      bg: "#ffffff"
-      surface: "#f5f6fb"
-      border: "#d9dee7"
-      muted: "#5f6b7a"
-      primary: "#1f73ff"
-      primary-strong: "#0f59d2"
-      danger: "#e75b64"
+      color:
+        text: "#111b26"
+        bg: "#ffffff"
+        surface: "#f5f6fb"
+        border: "#d9dee7"
+        muted: "#5f6b7a"
+        primary: "#1f73ff"
+        primary-strong: "#0f59d2"
+        danger: "#e75b64"
     breakpoints:
       xs: "480px"
       sm: "640px"
@@ -201,13 +202,14 @@ themes:
         background-color: "#0f172a"
         color: "#f8fafc"
     variables:
-      bg: "#0f172a"
-      surface: "#161b22"
-      border: "#30363d"
-      text: "#f8fafc"
-      muted: "#adb5c7"
-      primary: "#58a6ff"
-      primary-strong: "#2187ff"
+      color:
+        bg: "#0f172a"
+        surface: "#161b22"
+        border: "#30363d"
+        text: "#f8fafc"
+        muted: "#adb5c7"
+        primary: "#58a6ff"
+        primary-strong: "#2187ff"
   light:
     # Inherits from default
     inherits: default
@@ -216,13 +218,14 @@ themes:
         background-color: "#ffffff"
         color: "#0f172a"
     variables:
-      bg: "#ffffff"
-      surface: "#f5f6fb"
-      border: "#d9dee7"
-      text: "#111b26"
-      muted: "#5f6b7a"
-      primary: "#1f73ff"
-      primary-strong: "#0f59d2"
+      color:
+        bg: "#ffffff"
+        surface: "#f5f6fb"
+        border: "#d9dee7"
+        text: "#111b26"
+        muted: "#5f6b7a"
+        primary: "#1f73ff"
+        primary-strong: "#0f59d2"
 default_theme: default
 current_theme: default
 used_selectors: []
