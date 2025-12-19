@@ -1,9 +1,12 @@
 [package]
 name = "themed-styler"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Client-side runtime styling engine for web and React Native with theme support and Tailwind subset"
+authors = ["Ari Asulin"]
+repository = "http://github.com/clevertree/themed-styler"
+homepage = "https://relaynet.online"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
