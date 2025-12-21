@@ -3,6 +3,7 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_json::json;
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 mod default_state;
 use default_state::bundled_state;
@@ -412,7 +413,8 @@ fn split_tag_class_selector(s: &str) -> Option<(String, String)> {
     Some((tag, class_name))
 }
 
-// wasm-bindgen exports
+// wasm-bindgen exports (only when compiling to wasm32)
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn render_css_for_web(state_json: &str) -> String {
     match serde_json::from_str::<State>(state_json) {
@@ -421,6 +423,7 @@ pub fn render_css_for_web(state_json: &str) -> String {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn get_rn_styles(state_json: &str, selector: &str, classes_json: &str) -> String {
     let classes: Vec<String> = serde_json::from_str(classes_json).unwrap_or_default();
@@ -430,7 +433,16 @@ pub fn get_rn_styles(state_json: &str, selector: &str, classes_json: &str) -> St
     }
 }
 
+/// Android-specific accessor for styles; currently mirrors RN mapping.
+/// Kept distinct to allow future Android-only adjustments without changing RN/web.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn get_android_styles(state_json: &str, selector: &str, classes_json: &str) -> String {
+    get_rn_styles(state_json, selector, classes_json)
+}
+
 // Expose crate version to JS via wasm-bindgen
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn get_version() -> String {
     // CARGO_PKG_VERSION is provided at compile time
@@ -443,6 +455,7 @@ pub fn version() -> &'static str {
 }
 
 /// Return the embedded default state as a JSON string.
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn get_default_state_json() -> String {
     let st = bundled_state();
@@ -455,6 +468,7 @@ pub fn get_default_state_json() -> String {
 /// Register a theme from JSON. On duplicate, replace the theme's selectors, inheritance, and variables.
 /// Expected JSON format: `{ "name": "theme-name", "theme": { "inherits": "parent", "selectors": {...}, "variables": {...}, "breakpoints": {...} } }`
 /// Returns the updated state as JSON, or "{}" on error.
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn register_theme_json(state_json: &str, theme_json: &str) -> String {
     match (serde_json::from_str::<State>(state_json), serde_json::from_str::<serde_json::Value>(theme_json)) {
@@ -477,6 +491,7 @@ pub fn register_theme_json(state_json: &str, theme_json: &str) -> String {
 }
 
 /// Set the default and current theme. Returns the updated state as JSON.
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn set_theme_json(state_json: &str, theme_name: &str) -> String {
     match serde_json::from_str::<State>(state_json) {
@@ -496,6 +511,7 @@ pub fn set_theme_json(state_json: &str, theme_name: &str) -> String {
 
 /// Get all theme keys and names as JSON array: [{ "key": "default", "name": "Default Theme" }, ...]
 /// Returns array of themes from the state JSON.
+#[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn get_theme_list_json(state_json: &str) -> String {
     match serde_json::from_str::<State>(state_json) {

@@ -188,15 +188,16 @@ export function getCssForWeb(): string {
   return `/* themed-styler fallback (no renderer):\nclasses=${JSON.stringify(snap.classes)}\ntags=${JSON.stringify(snap.tags)}\ntagClasses=${JSON.stringify(snap.tagClasses)}\n*/`
 }
 
-// RN accessor: placeholder returns empty style object. Later will query real runtime state.
+// RN accessor: REQUIRES native hook to be loaded; throws if unavailable.
 export function getRnStyles(selector: string, classes: string[] = []) {
-  // Attempt to call a provided hook if present
   const g: any = typeof globalThis !== 'undefined' ? (globalThis as any) : {}
-  if (typeof g.__themedStylerGetRn === 'function') {
-    const themesState = getThemes()
-    try { return g.__themedStylerGetRn(selector, classes, themesState) } catch (e) { }
+  if (typeof g.__themedStylerGetRn !== 'function') {
+    throw new Error('[themedStylerBridge.getRnStyles] Native hook __themedStylerGetRn not available. Ensure initThemedStyler() completed successfully.')
   }
-  return {}
+  const themesState = getThemes()
+  try { return g.__themedStylerGetRn(selector, classes, themesState) } catch (e) {
+    throw new Error(`[themedStylerBridge.getRnStyles] Failed to compute styles: ${e}`)
+  }
 }
 
 export default {

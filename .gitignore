@@ -21,6 +21,12 @@ release/
 # Keep Cargo.lock tracked (do not ignore)
 # !Cargo.lock
 
+# Build output
+dist/
+build/
+out/
+bin/
+
 # OS/Editor settings
 .DS_Store
 Thumbs.db

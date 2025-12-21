@@ -55,8 +55,44 @@ export function resolveThemedStyle(tag: string, className?: string) {
 const overflowClassRegex = /\boverflow(?:-[xy])?-[a-z0-9-]+\b/i
 const buttonComponent = TouchableOpacity ?? View
 const tagComponentMap: Record<string, React.ComponentType<any>> = {
+    // Inline text elements
     span: Text,
+    strong: Text,
+    em: Text,
+    i: Text,
+    b: Text,
+    u: Text,
+    code: Text,
+    label: Text,
+    small: Text,
+    mark: Text,
+    del: Text,
+    ins: Text,
+    sub: Text,
+    sup: Text,
+    kbd: Text,
+    samp: Text,
+    var: Text,
+    abbr: Text,
+    cite: Text,
+    q: Text,
+
+    // Block text elements (Text component in React Native for text content)
+    h1: Text,
+    h2: Text,
+    h3: Text,
+    h4: Text,
+    h5: Text,
+    h6: Text,
+    p: Text,
+    blockquote: Text,
+    pre: Text,
+
+    // Interactive elements
     button: buttonComponent,
+    a: Text, // Links render as touchable text in RN
+
+    // Container elements
     main: SafeAreaView,
     'safe-area': SafeAreaView,
     'safe-area-view': SafeAreaView,
@@ -77,6 +113,8 @@ function hasOverflowClass(className?: string) {
 
 function prefersScrollView(rest: Record<string, any>, className?: string) {
     if (hasOverflowClass(className)) return true
+    // Ensure rest is a valid object before checking properties
+    if (!rest || typeof rest !== 'object') return false
     const scrollProps = [
         'horizontal',
         'contentContainerStyle',

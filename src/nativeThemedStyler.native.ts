@@ -20,18 +20,9 @@ export async function initNativeThemedStyler(): Promise<void> {
     const g: any = typeof globalThis !== 'undefined' ? (globalThis as any) : {}
     if (g.__themedStylerRenderCss && g.__themedStylerGetRn) {
         return
-        console.log('[nativeThemedStyler] Module check:', {
-            hasModule: !!themedStylerModule,
-            type: typeof themedStylerModule,
-            hasGetVersion: typeof themedStylerModule?.getVersion,
-            hasRenderCss: typeof themedStylerModule?.renderCss,
-            hasGetRnStyles: typeof themedStylerModule?.getRnStyles,
-            hasGetDefaultState: typeof themedStylerModule?.getDefaultState,
-        })
     }
     if (!themedStylerModule) {
-        console.warn('[nativeThemedStyler] Native themed-styler module not linked')
-        return
+        throw new Error('[nativeThemedStyler] Native themed-styler module not linked. Ensure TurboModule is properly registered.')
     }
 
     if (typeof themedStylerModule.getVersion === 'function') {
