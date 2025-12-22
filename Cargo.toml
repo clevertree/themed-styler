@@ -8,6 +8,44 @@ authors = ["Ari Asulin"]
 repository = "http://github.com/clevertree/themed-styler"
 homepage = "https://relaynet.online"
 
+readme = "README.md"
+keywords = ["theme", "styling", "react-native", "wasm"]
+categories = ["wasm", "gui", "rendering"]
+exclude = [
+	# JavaScript/TypeScript and npm artifacts
+	"dist/**",
+	"pkg/**",
+	"wasm/**",
+	"src/**/*.ts",
+	"src/**/*.tsx",
+	"src/**/*.js",
+	"package.json",
+	"package-lock.json",
+	"tsconfig.json",
+	"node_modules/**",
+	
+	# Development and testing
+	"tests/**",
+	"scripts/**",
+	"docs/**",
+	"media/**",
+	"assets/**",
+	"android/**",
+	"ios/**",
+	"target/**",
+	"theme.yaml",
+	
+	# CI/CD and Git
+	".github/**",
+	".git/**",
+	".gitignore",
+	
+	# IDE and OS
+	".idea/**",
+	".vscode/**",
+	"*.tgz",
+]
+
 [lib]
 crate-type = ["cdylib", "rlib", "staticlib"]
 
