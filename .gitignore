@@ -23,6 +23,7 @@ release/
 
 # Build output
 dist/
+pkg/
 build/
 out/
 bin/

@@ -9,6 +9,9 @@ export const register_theme_json: (a: number, b: number, c: number, d: number) =
 export const render_css_for_web: (a: number, b: number) => [number, number];
 export const set_theme_json: (a: number, b: number, c: number, d: number) => [number, number];
 export const get_rn_styles: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+export const themed_styler_free_string: (a: number) => void;
+export const themed_styler_render_css: (a: number, b: number) => number;
+export const themed_styler_version: () => number;
 export const __wbindgen_externrefs: WebAssembly.Table;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

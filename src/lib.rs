@@ -1502,7 +1502,13 @@ mod tests {
 }
 
 #[cfg(all(target_os = "android", feature = "android"))]
+#[cfg(feature = "android")]
 mod android_jni;
+
+mod bridge_common;
+mod ffi;
+
+pub use ffi::*;
 
 #[cfg(target_vendor = "apple")]
 mod ios_ffi;

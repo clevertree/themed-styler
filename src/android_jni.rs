@@ -1,12 +1,12 @@
-use crate::{State, ThemeEntry, version};
-use indexmap::{IndexMap, IndexSet};
-use jni::objects::{JObject, JString};
+use crate::{version, State, bridge_common::{self, UsageSnapshot}};
+use jni::objects::{JClass, JString};
 use jni::sys::jstring;
 use jni::JNIEnv;
-use serde::Deserialize;
-use std::collections::hash_map::Entry;
 
 fn jstring_to_string(env: &mut JNIEnv, input: JString) -> Option<String> {
+  if input.is_null() {
+    return None;
+  }
   match env.get_string(&input) {
     Ok(v) => v.to_str().ok().map(|s| s.to_string()),
     Err(_) => None,
@@ -16,76 +16,56 @@ fn jstring_to_string(env: &mut JNIEnv, input: JString) -> Option<String> {
 fn new_jstring(env: &mut JNIEnv, value: &str) -> jstring {
   match env.new_string(value) {
     Ok(jstr) => jstr.into_raw(),
-    Err(_) => env.new_string("",).unwrap().into_raw(),
-  }
-}
-
-#[derive(Deserialize, Default)]
-struct UsageSnapshot {
-  #[serde(default)]
-  selectors: Vec<String>,
-  #[serde(default)]
-  classes: Vec<String>,
-}
-
-#[derive(Deserialize, Default)]
-struct ThemesInput {
-  #[serde(default)]
-  themes: IndexMap<String, ThemeEntry>,
-  #[serde(rename = "currentTheme", default)]
-  current_theme: Option<String>,
-}
-
-fn build_state(usage: UsageSnapshot, themes_input: ThemesInput) -> State {
-  let mut state = State::new_default();
-  if !themes_input.themes.is_empty() {
-    state.themes = themes_input.themes;
-    if let Some(current) = themes_input.current_theme.clone() {
-      if state.themes.contains_key(&current) {
-        state.current_theme = current;
-      }
-    }
-    if state.default_theme.is_empty() {
-      if let Some((name, _)) = state.themes.iter().next() {
-        state.default_theme = name.clone();
+    Err(_) => {
+      match env.new_string("") {
+        Ok(jstr) => jstr.into_raw(),
+        Err(_) => std::ptr::null_mut(),
       }
     }
   }
-  state.register_selectors(usage.selectors);
-  for class in usage.classes {
-    state.used_classes.insert(class);
-  }
-  state
-}
-
-fn parse_usage_json(json: &str) -> UsageSnapshot {
-  serde_json::from_str(json).unwrap_or_default()
-}
-
-fn parse_themes_json(json: &str) -> ThemesInput {
-  serde_json::from_str(json).unwrap_or_default()
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_com_relay_client_ThemedStylerModule_nativeRenderCss(
+pub extern "system" fn Java_com_relay_client_ThemedStylerModule_nativeRenderCss(
+  env: JNIEnv,
+  class: JClass,
+  usage_json: JString,
+  themes_json: JString,
+) -> jstring {
+  Java_com_relay_pure_ThemedStylerModule_nativeRenderCss(env, class, usage_json, themes_json)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeRenderCss(
   mut env: JNIEnv,
-  _this: JObject,
+  _class: JClass,
   usage_json: JString,
   themes_json: JString,
 ) -> jstring {
   let usage = jstring_to_string(&mut env, usage_json).unwrap_or_else(|| "{}".to_string());
   let themes = jstring_to_string(&mut env, themes_json).unwrap_or_else(|| "{}".to_string());
-  let snapshot = parse_usage_json(&usage);
-  let themes_input = parse_themes_json(&themes);
-  let state = build_state(snapshot, themes_input);
+  let snapshot = bridge_common::parse_usage_json(&usage);
+  let themes_input = bridge_common::parse_themes_json(&themes);
+  let state = bridge_common::build_state(snapshot, themes_input);
   let css = state.css_for_web();
   new_jstring(&mut env, &css)
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_com_relay_client_ThemedStylerModule_nativeGetRnStyles(
+pub extern "system" fn Java_com_relay_client_ThemedStylerModule_nativeGetRnStyles(
+  env: JNIEnv,
+  class: JClass,
+  selector: JString,
+  classes_json: JString,
+  themes_json: JString,
+) -> jstring {
+  Java_com_relay_pure_ThemedStylerModule_nativeGetRnStyles(env, class, selector, classes_json, themes_json)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeGetRnStyles(
   mut env: JNIEnv,
-  _this: JObject,
+  _class: JClass,
   selector: JString,
   classes_json: JString,
   themes_json: JString,
@@ -94,8 +74,8 @@ pub extern "C" fn Java_com_relay_client_ThemedStylerModule_nativeGetRnStyles(
   let classes = jstring_to_string(&mut env, classes_json).unwrap_or_else(|| "[]".to_string());
   let themes = jstring_to_string(&mut env, themes_json).unwrap_or_else(|| "{}".to_string());
   let classes_vec: Vec<String> = serde_json::from_str(&classes).unwrap_or_default();
-  let themes_input = parse_themes_json(&themes);
-  let state = build_state(UsageSnapshot::default(), themes_input);
+  let themes_input = bridge_common::parse_themes_json(&themes);
+  let state = bridge_common::build_state(UsageSnapshot::default(), themes_input);
   let styles = state.rn_styles_for(&selector_str, &classes_vec);
   match serde_json::to_string(&styles) {
     Ok(json) => new_jstring(&mut env, &json),
@@ -104,21 +84,90 @@ pub extern "C" fn Java_com_relay_client_ThemedStylerModule_nativeGetRnStyles(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_com_relay_client_ThemedStylerModule_nativeGetDefaultState(
-  mut env: JNIEnv,
-  _this: JObject,
+pub extern "system" fn Java_com_relay_client_ThemedStylerModule_nativeGetAndroidStyles(
+  env: JNIEnv,
+  class: JClass,
+  selector: JString,
+  classes_json: JString,
+  themes_json: JString,
 ) -> jstring {
-  let state = State::default_state();
-  match serde_json::to_string(&state.to_json()) {
+  Java_com_relay_pure_ThemedStylerModule_nativeGetAndroidStyles(env, class, selector, classes_json, themes_json)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeGetAndroidStyles(
+  mut env: JNIEnv,
+  _class: JClass,
+  selector: JString,
+  classes_json: JString,
+  themes_json: JString,
+) -> jstring {
+  let selector_str = jstring_to_string(&mut env, selector).unwrap_or_else(|| String::new());
+  let classes = jstring_to_string(&mut env, classes_json).unwrap_or_else(|| "[]".to_string());
+  let themes = jstring_to_string(&mut env, themes_json).unwrap_or_else(|| "{}".to_string());
+  let classes_vec: Vec<String> = serde_json::from_str(&classes).unwrap_or_default();
+  let themes_input = bridge_common::parse_themes_json(&themes);
+  let state = bridge_common::build_state(UsageSnapshot::default(), themes_input);
+  let mut styles = state.rn_styles_for(&selector_str, &classes_vec);
+
+  // Android-specific layout enhancements
+  if selector_str == "div" || selector_str == "view" {
+    if styles.get("flexDirection").map_or(false, |v| v.as_str() == Some("row")) {
+      styles.insert("width".to_string(), serde_json::json!("match_parent"));
+    } else if !styles.contains_key("width") {
+      styles.insert("width".to_string(), serde_json::json!("match_parent"));
+    }
+    if selector_str == "div" && !styles.contains_key("height") {
+      styles.insert("height".to_string(), serde_json::json!("wrap_content"));
+    }
+  }
+  if selector_str == "span" || selector_str == "text" {
+    if !styles.contains_key("width") {
+      styles.insert("width".to_string(), serde_json::json!("wrap_content"));
+    }
+    if !styles.contains_key("height") {
+      styles.insert("height".to_string(), serde_json::json!("wrap_content"));
+    }
+  }
+
+  match serde_json::to_string(&styles) {
     Ok(json) => new_jstring(&mut env, &json),
     Err(_) => new_jstring(&mut env, "{}"),
   }
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_com_relay_client_ThemedStylerModule_nativeGetVersion(
+pub extern "system" fn Java_com_relay_client_ThemedStylerModule_nativeGetDefaultState(
+  env: JNIEnv,
+  class: JClass,
+) -> jstring {
+  Java_com_relay_pure_ThemedStylerModule_nativeGetDefaultState(env, class)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeGetDefaultState(
   mut env: JNIEnv,
-  _this: JObject,
+  _class: JClass,
+) -> jstring {
+  let state = State::new_default();
+  match serde_json::to_string(&state) {
+    Ok(json) => new_jstring(&mut env, &json),
+    Err(_) => new_jstring(&mut env, "{}"),
+  }
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_relay_client_ThemedStylerModule_nativeGetVersion(
+  env: JNIEnv,
+  class: JClass,
+) -> jstring {
+  Java_com_relay_pure_ThemedStylerModule_nativeGetVersion(env, class)
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeGetVersion(
+  mut env: JNIEnv,
+  _class: JClass,
 ) -> jstring {
   new_jstring(&mut env, version())
 }

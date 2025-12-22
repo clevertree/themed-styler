@@ -48,6 +48,9 @@ export interface InitOutput {
   readonly render_css_for_web: (a: number, b: number) => [number, number];
   readonly set_theme_json: (a: number, b: number, c: number, d: number) => [number, number];
   readonly get_rn_styles: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+  readonly themed_styler_free_string: (a: number) => void;
+  readonly themed_styler_render_css: (a: number, b: number) => number;
+  readonly themed_styler_version: () => number;
   readonly __wbindgen_externrefs: WebAssembly.Table;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

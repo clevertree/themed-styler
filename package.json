@@ -8,9 +8,15 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "android": "./dist/index.android.js",
       "react-native": "./dist/index.native.js",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./android": {
+      "types": "./dist/index.android.d.ts",
+      "import": "./dist/index.android.js",
+      "default": "./dist/index.android.js"
     }
   },
   "files": [
@@ -22,7 +28,8 @@
   ],
   "scripts": {
     "build": "tsc && npm run build:wasm",
-    "build:wasm": "wasm-pack build --release --target web --features wasm && mkdir -p wasm && cp pkg/themed_styler* wasm/"
+    "build:wasm": "wasm-pack build --release --target web --features wasm && mkdir -p wasm && cp pkg/themed_styler* wasm/",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
     "react": "^18.0.0 || ^19.0.0",
@@ -42,5 +49,12 @@
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
     "react-native": "*"
-  }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false
 }

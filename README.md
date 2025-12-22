@@ -1,4 +1,4 @@
-# @clevertree/themed-styler
+# <img src="icon.png" width="32" height="32" align="center" /> @clevertree/themed-styler
 
 A high-performance styling engine for Relay that supports dynamic theme switching and consistent rendering across Web and Native platforms.
 
@@ -25,6 +25,14 @@ async function startApp() {
   // StyleManager in @clevertree/client-shared will now use the WASM core
 }
 ```
+
+Ensure the WASM is built with:
+
+```bash
+wasm-pack build --release --target web --features wasm
+```
+
+This produces `pkg/themed_styler.js` and `pkg/themed_styler_bg.wasm` which are copied into the `wasm/` directory during `npm run build`.
 
 ### React Native
 
@@ -57,3 +65,14 @@ const MyComponent = () => (
 - **Web**: Compiles to WASM. Generates optimized CSS at runtime.
 - **Android**: JNI binding to Rust core via TurboModule.
 - **iOS**: (Coming soon) C-FFI binding to Rust core via TurboModule.
+
+## Verify Locally
+
+Build and dry-run pack to confirm publish contents:
+
+```bash
+npm run build
+npm pack --dry-run
+```
+
+Node.js >= 18 is required for ESM and tooling.
