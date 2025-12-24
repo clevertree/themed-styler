@@ -1,22 +1,22 @@
 {
   "name": "@clevertree/themed-styler",
-  "version": "1.2.2",
-  "description": "Themed styler for Relay - React Native with JSI support",
+  "version": "1.2.3",
+  "description": "Themed styler for Relay - Android/iOS Native with JSI support",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/web/index.js",
+  "types": "./dist/web/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "android": "./dist/index.android.js",
-      "react-native": "./dist/index.native.js",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "types": "./dist/web/index.d.ts",
+      "android": "./dist/android/index.android.js",
+      "android-ios-native": "./dist/android/index.native.js",
+      "import": "./dist/web/index.js",
+      "default": "./dist/web/index.js"
     },
     "./android": {
-      "types": "./dist/index.android.d.ts",
-      "import": "./dist/index.android.js",
-      "default": "./dist/index.android.js"
+      "types": "./dist/android/index.android.d.ts",
+      "import": "./dist/android/index.android.js",
+      "default": "./dist/android/index.android.js"
     }
   },
   "files": [
@@ -37,10 +37,10 @@
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
-    "react-native": "*"
+    "android-ios-native": "*"
   },
   "peerDependenciesMeta": {
-    "react-native": {
+    "android-ios-native": {
       "optional": true
     }
   },
@@ -48,7 +48,7 @@
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
-    "react-native": "*"
+    "android-ios-native": "*"
   },
   "engines": {
     "node": ">=18"

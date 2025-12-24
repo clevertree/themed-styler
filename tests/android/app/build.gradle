@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.styler.test'
+    namespace 'com.relay.test'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.styler.test"
+        applicationId "com.relay.test"
         minSdk 24
         targetSdk 34
         versionCode 1

@@ -13,16 +13,20 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "resolveJsonModule": true
   },
   "include": [
-    "src/**/*"
+    "web/**/*",
+    "android/**/*",
+    "shared/**/*",
+    "types.d.ts"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/**/*"
   ],
   "ts-node": {
     "compilerOptions": {

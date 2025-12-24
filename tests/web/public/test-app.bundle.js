@@ -795,7 +795,7 @@ var require_react_development = __commonJS({
             $$typeof: REACT_CONTEXT_TYPE,
             // As a workaround to support multiple concurrent renderers, we categorize
             // some renderers as primary and others as secondary. We only expect
-            // there to be two concurrent renderers at most: React Native (primary) and
+            // there to be two concurrent renderers at most: Android/iOS Native (primary) and
             // Fabric (secondary); React DOM (primary) and React ART (secondary).
             // Secondary renderers store their context values on separate fields.
             _currentValue: defaultValue,
@@ -1102,7 +1102,7 @@ var require_react_development = __commonJS({
           var dispatcher = resolveDispatcher();
           return dispatcher.useRef(initialValue);
         }
-        function useEffect6(create, deps) {
+        function useEffect5(create, deps) {
           var dispatcher = resolveDispatcher();
           return dispatcher.useEffect(create, deps);
         }
@@ -1885,7 +1885,7 @@ var require_react_development = __commonJS({
         exports.useContext = useContext2;
         exports.useDebugValue = useDebugValue;
         exports.useDeferredValue = useDeferredValue;
-        exports.useEffect = useEffect6;
+        exports.useEffect = useEffect5;
         exports.useId = useId;
         exports.useImperativeHandle = useImperativeHandle;
         exports.useInsertionEffect = useInsertionEffect;
@@ -2389,9 +2389,9 @@ var require_react_dom_development = __commonJS({
         if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" && typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart === "function") {
           __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
         }
-        var React7 = require_react();
+        var React5 = require_react();
         var Scheduler = require_scheduler();
-        var ReactSharedInternals = React7.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+        var ReactSharedInternals = React5.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
         var suppressWarning = false;
         function setSuppressWarning(newSuppressWarning) {
           {
@@ -3996,7 +3996,7 @@ var require_react_dom_development = __commonJS({
           {
             if (props.value == null) {
               if (typeof props.children === "object" && props.children !== null) {
-                React7.Children.forEach(props.children, function(child) {
+                React5.Children.forEach(props.children, function(child) {
                   if (child == null) {
                     return;
                   }
@@ -23565,7 +23565,7 @@ var require_react_jsx_runtime_development = __commonJS({
     if (true) {
       (function() {
         "use strict";
-        var React7 = require_react();
+        var React5 = require_react();
         var REACT_ELEMENT_TYPE = Symbol.for("react.element");
         var REACT_PORTAL_TYPE = Symbol.for("react.portal");
         var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
@@ -23591,7 +23591,7 @@ var require_react_jsx_runtime_development = __commonJS({
           }
           return null;
         }
-        var ReactSharedInternals = React7.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+        var ReactSharedInternals = React5.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
         function error(format) {
           {
             {
@@ -24463,7 +24463,7 @@ var require_jsx_runtime = __commonJS({
   }
 });
 
-// ../../../hook-transpiler/wasm/relay_hook_transpiler.js
+// ../../../hook-transpiler/dist/wasm/relay_hook_transpiler.js
 var relay_hook_transpiler_exports = {};
 __export(relay_hook_transpiler_exports, {
   default: () => relay_hook_transpiler_default,
@@ -24732,7 +24732,7 @@ async function __wbg_init(module_or_path) {
 }
 var wasm, cachedDataViewMemory0, cachedUint8ArrayMemory0, cachedTextDecoder, MAX_SAFARI_DECODE_BYTES, numBytesDecoded, cachedTextEncoder, WASM_VECTOR_LEN, EXPECTED_RESPONSE_TYPES, relay_hook_transpiler_default;
 var init_relay_hook_transpiler = __esm({
-  "../../../hook-transpiler/wasm/relay_hook_transpiler.js"() {
+  "../../../hook-transpiler/dist/wasm/relay_hook_transpiler.js"() {
     "use strict";
     cachedDataViewMemory0 = null;
     cachedUint8ArrayMemory0 = null;
@@ -31551,10 +31551,10 @@ var init_browser = __esm({
   }
 });
 
-// ../../dist/theme.js
+// ../../dist/shared/theme.js
 var themeYaml;
 var init_theme = __esm({
-  "../../dist/theme.js"() {
+  "../../dist/shared/theme.js"() {
     "use strict";
     themeYaml = `themes:
   default:
@@ -31667,7 +31667,7 @@ default_theme: default
   }
 });
 
-// ../../dist/styleManager.js
+// ../../dist/web/styleManager.js
 var styleManager_exports = {};
 __export(styleManager_exports, {
   default: () => styleManager_default,
@@ -31821,7 +31821,7 @@ function onChange(cb) {
 }
 var import_react5, styleEl, syncInterval, lastSnapshotJson, debounceTimer, forceRenderNext, emitter, isDevMode, styleManager_default;
 var init_styleManager = __esm({
-  "../../dist/styleManager.js"() {
+  "../../dist/web/styleManager.js"() {
     "use strict";
     init_unifiedBridge();
     import_react5 = __toESM(require_react(), 1);
@@ -31847,7 +31847,7 @@ var init_styleManager = __esm({
   }
 });
 
-// ../../dist/themedStylerBridge.js
+// ../../dist/shared/themedStylerBridge.js
 function registerUsage(tag2, props, hierarchy) {
   const cls = props ? props.className || props.class || "" : "";
   const classes = typeof cls === "string" && cls.trim().length ? cls.split(/\s+/).map((c) => c.trim()).filter(Boolean) : [];
@@ -32017,7 +32017,7 @@ function getRnStyles(selector, classes = []) {
 }
 var usage, themes, currentTheme, _defaults_loaded, themedStylerBridge_default;
 var init_themedStylerBridge = __esm({
-  "../../dist/themedStylerBridge.js"() {
+  "../../dist/shared/themedStylerBridge.js"() {
     "use strict";
     init_browser();
     init_theme();
@@ -32046,10 +32046,10 @@ var init_themedStylerBridge = __esm({
   }
 });
 
-// ../../dist/unifiedBridge.js
+// ../../dist/shared/unifiedBridge.js
 var unifiedBridge, unifiedBridge_default;
 var init_unifiedBridge = __esm({
-  "../../dist/unifiedBridge.js"() {
+  "../../dist/shared/unifiedBridge.js"() {
     "use strict";
     init_themedStylerBridge();
     unifiedBridge = {
@@ -32084,306 +32084,13 @@ var init_unifiedBridge = __esm({
   }
 });
 
-// ../../wasm/themed_styler.js
-var themed_styler_exports = {};
-__export(themed_styler_exports, {
-  default: () => themed_styler_default,
-  get_android_styles: () => get_android_styles,
-  get_default_state_json: () => get_default_state_json,
-  get_rn_styles: () => get_rn_styles,
-  get_theme_list_json: () => get_theme_list_json,
-  get_version: () => get_version2,
-  initSync: () => initSync2,
-  register_theme_json: () => register_theme_json,
-  render_css_for_web: () => render_css_for_web,
-  set_theme_json: () => set_theme_json
-});
-function getStringFromWasm02(ptr, len) {
-  ptr = ptr >>> 0;
-  return decodeText2(ptr, len);
-}
-function getUint8ArrayMemory02() {
-  if (cachedUint8ArrayMemory02 === null || cachedUint8ArrayMemory02.byteLength === 0) {
-    cachedUint8ArrayMemory02 = new Uint8Array(wasm2.memory.buffer);
-  }
-  return cachedUint8ArrayMemory02;
-}
-function passStringToWasm02(arg, malloc, realloc) {
-  if (realloc === void 0) {
-    const buf = cachedTextEncoder2.encode(arg);
-    const ptr2 = malloc(buf.length, 1) >>> 0;
-    getUint8ArrayMemory02().subarray(ptr2, ptr2 + buf.length).set(buf);
-    WASM_VECTOR_LEN2 = buf.length;
-    return ptr2;
-  }
-  let len = arg.length;
-  let ptr = malloc(len, 1) >>> 0;
-  const mem = getUint8ArrayMemory02();
-  let offset = 0;
-  for (; offset < len; offset++) {
-    const code = arg.charCodeAt(offset);
-    if (code > 127)
-      break;
-    mem[ptr + offset] = code;
-  }
-  if (offset !== len) {
-    if (offset !== 0) {
-      arg = arg.slice(offset);
-    }
-    ptr = realloc(ptr, len, len = offset + arg.length * 3, 1) >>> 0;
-    const view = getUint8ArrayMemory02().subarray(ptr + offset, ptr + len);
-    const ret = cachedTextEncoder2.encodeInto(arg, view);
-    offset += ret.written;
-    ptr = realloc(ptr, len, offset, 1) >>> 0;
-  }
-  WASM_VECTOR_LEN2 = offset;
-  return ptr;
-}
-function decodeText2(ptr, len) {
-  numBytesDecoded2 += len;
-  if (numBytesDecoded2 >= MAX_SAFARI_DECODE_BYTES2) {
-    cachedTextDecoder2 = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
-    cachedTextDecoder2.decode();
-    numBytesDecoded2 = len;
-  }
-  return cachedTextDecoder2.decode(getUint8ArrayMemory02().subarray(ptr, ptr + len));
-}
-function get_android_styles(state_json, selector, classes_json) {
-  let deferred4_0;
-  let deferred4_1;
-  try {
-    const ptr0 = passStringToWasm02(state_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN2;
-    const ptr1 = passStringToWasm02(selector, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN2;
-    const ptr2 = passStringToWasm02(classes_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len2 = WASM_VECTOR_LEN2;
-    const ret = wasm2.get_android_styles(ptr0, len0, ptr1, len1, ptr2, len2);
-    deferred4_0 = ret[0];
-    deferred4_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred4_0, deferred4_1, 1);
-  }
-}
-function get_default_state_json() {
-  let deferred1_0;
-  let deferred1_1;
-  try {
-    const ret = wasm2.get_default_state_json();
-    deferred1_0 = ret[0];
-    deferred1_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred1_0, deferred1_1, 1);
-  }
-}
-function get_rn_styles(state_json, selector, classes_json) {
-  let deferred4_0;
-  let deferred4_1;
-  try {
-    const ptr0 = passStringToWasm02(state_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN2;
-    const ptr1 = passStringToWasm02(selector, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN2;
-    const ptr2 = passStringToWasm02(classes_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len2 = WASM_VECTOR_LEN2;
-    const ret = wasm2.get_rn_styles(ptr0, len0, ptr1, len1, ptr2, len2);
-    deferred4_0 = ret[0];
-    deferred4_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred4_0, deferred4_1, 1);
-  }
-}
-function get_theme_list_json(state_json) {
-  let deferred2_0;
-  let deferred2_1;
-  try {
-    const ptr0 = passStringToWasm02(state_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN2;
-    const ret = wasm2.get_theme_list_json(ptr0, len0);
-    deferred2_0 = ret[0];
-    deferred2_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred2_0, deferred2_1, 1);
-  }
-}
-function get_version2() {
-  let deferred1_0;
-  let deferred1_1;
-  try {
-    const ret = wasm2.get_version();
-    deferred1_0 = ret[0];
-    deferred1_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred1_0, deferred1_1, 1);
-  }
-}
-function register_theme_json(state_json, theme_json) {
-  let deferred3_0;
-  let deferred3_1;
-  try {
-    const ptr0 = passStringToWasm02(state_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN2;
-    const ptr1 = passStringToWasm02(theme_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN2;
-    const ret = wasm2.register_theme_json(ptr0, len0, ptr1, len1);
-    deferred3_0 = ret[0];
-    deferred3_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred3_0, deferred3_1, 1);
-  }
-}
-function render_css_for_web(state_json) {
-  let deferred2_0;
-  let deferred2_1;
-  try {
-    const ptr0 = passStringToWasm02(state_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN2;
-    const ret = wasm2.render_css_for_web(ptr0, len0);
-    deferred2_0 = ret[0];
-    deferred2_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred2_0, deferred2_1, 1);
-  }
-}
-function set_theme_json(state_json, theme_name) {
-  let deferred3_0;
-  let deferred3_1;
-  try {
-    const ptr0 = passStringToWasm02(state_json, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len0 = WASM_VECTOR_LEN2;
-    const ptr1 = passStringToWasm02(theme_name, wasm2.__wbindgen_malloc, wasm2.__wbindgen_realloc);
-    const len1 = WASM_VECTOR_LEN2;
-    const ret = wasm2.set_theme_json(ptr0, len0, ptr1, len1);
-    deferred3_0 = ret[0];
-    deferred3_1 = ret[1];
-    return getStringFromWasm02(ret[0], ret[1]);
-  } finally {
-    wasm2.__wbindgen_free(deferred3_0, deferred3_1, 1);
-  }
-}
-async function __wbg_load2(module, imports) {
-  if (typeof Response === "function" && module instanceof Response) {
-    if (typeof WebAssembly.instantiateStreaming === "function") {
-      try {
-        return await WebAssembly.instantiateStreaming(module, imports);
-      } catch (e) {
-        const validResponse = module.ok && EXPECTED_RESPONSE_TYPES2.has(module.type);
-        if (validResponse && module.headers.get("Content-Type") !== "application/wasm") {
-          console.warn("`WebAssembly.instantiateStreaming` failed because your server does not serve Wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:\n", e);
-        } else {
-          throw e;
-        }
-      }
-    }
-    const bytes = await module.arrayBuffer();
-    return await WebAssembly.instantiate(bytes, imports);
-  } else {
-    const instance = await WebAssembly.instantiate(module, imports);
-    if (instance instanceof WebAssembly.Instance) {
-      return { instance, module };
-    } else {
-      return instance;
-    }
-  }
-}
-function __wbg_get_imports2() {
-  const imports = {};
-  imports.wbg = {};
-  imports.wbg.__wbindgen_init_externref_table = function() {
-    const table = wasm2.__wbindgen_externrefs;
-    const offset = table.grow(4);
-    table.set(0, void 0);
-    table.set(offset + 0, void 0);
-    table.set(offset + 1, null);
-    table.set(offset + 2, true);
-    table.set(offset + 3, false);
-  };
-  return imports;
-}
-function __wbg_finalize_init2(instance, module) {
-  wasm2 = instance.exports;
-  __wbg_init2.__wbindgen_wasm_module = module;
-  cachedUint8ArrayMemory02 = null;
-  wasm2.__wbindgen_start();
-  return wasm2;
-}
-function initSync2(module) {
-  if (wasm2 !== void 0)
-    return wasm2;
-  if (typeof module !== "undefined") {
-    if (Object.getPrototypeOf(module) === Object.prototype) {
-      ({ module } = module);
-    } else {
-      console.warn("using deprecated parameters for `initSync()`; pass a single object instead");
-    }
-  }
-  const imports = __wbg_get_imports2();
-  if (!(module instanceof WebAssembly.Module)) {
-    module = new WebAssembly.Module(module);
-  }
-  const instance = new WebAssembly.Instance(module, imports);
-  return __wbg_finalize_init2(instance, module);
-}
-async function __wbg_init2(module_or_path) {
-  if (wasm2 !== void 0)
-    return wasm2;
-  if (typeof module_or_path !== "undefined") {
-    if (Object.getPrototypeOf(module_or_path) === Object.prototype) {
-      ({ module_or_path } = module_or_path);
-    } else {
-      console.warn("using deprecated parameters for the initialization function; pass a single object instead");
-    }
-  }
-  if (typeof module_or_path === "undefined") {
-    module_or_path = new URL("themed_styler_bg.wasm", import.meta.url);
-  }
-  const imports = __wbg_get_imports2();
-  if (typeof module_or_path === "string" || typeof Request === "function" && module_or_path instanceof Request || typeof URL === "function" && module_or_path instanceof URL) {
-    module_or_path = fetch(module_or_path);
-  }
-  const { instance, module } = await __wbg_load2(await module_or_path, imports);
-  return __wbg_finalize_init2(instance, module);
-}
-var wasm2, cachedUint8ArrayMemory02, cachedTextDecoder2, MAX_SAFARI_DECODE_BYTES2, numBytesDecoded2, cachedTextEncoder2, WASM_VECTOR_LEN2, EXPECTED_RESPONSE_TYPES2, themed_styler_default;
-var init_themed_styler = __esm({
-  "../../wasm/themed_styler.js"() {
-    "use strict";
-    cachedUint8ArrayMemory02 = null;
-    cachedTextDecoder2 = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
-    cachedTextDecoder2.decode();
-    MAX_SAFARI_DECODE_BYTES2 = 2146435072;
-    numBytesDecoded2 = 0;
-    cachedTextEncoder2 = new TextEncoder();
-    if (!("encodeInto" in cachedTextEncoder2)) {
-      cachedTextEncoder2.encodeInto = function(arg, view) {
-        const buf = cachedTextEncoder2.encode(arg);
-        view.set(buf);
-        return {
-          read: arg.length,
-          written: buf.length
-        };
-      };
-    }
-    WASM_VECTOR_LEN2 = 0;
-    EXPECTED_RESPONSE_TYPES2 = /* @__PURE__ */ new Set(["basic", "cors", "default"]);
-    themed_styler_default = __wbg_init2;
-  }
-});
-
 // public/test-app.js
-var import_react8 = __toESM(require_react(), 1);
+var import_react6 = __toESM(require_react(), 1);
 var import_client = __toESM(require_client(), 1);
 
-// ../../../hook-transpiler/dist/runtimeLoader.js
+// ../../../hook-transpiler/dist/web/runtimeLoader.js
 var WebModuleLoader = class {
-  async executeModule(code, filename, context, fetchUrl) {
+  async executeModule(code, filename, context, fetchUrl, isMainHook = false) {
     const exports = {};
     const module = { exports };
     try {
@@ -32391,48 +32098,40 @@ var WebModuleLoader = class {
       window.__ctx__ = context;
       window.__hook_import_with = async (spec, fromFile) => {
         try {
-          const dbg = globalThis.__HOOK_DEBUG || typeof localStorage !== "undefined" && localStorage.getItem("hookDebug") === "1";
-          if (dbg) {
-            try {
-              console.debug("[__hook_import_with] spec=", spec, "fromFile=", fromFile);
-            } catch {
-            }
-          }
+          console.error("[WebModuleLoader] __hook_import_with call:", spec, "from", fromFile);
           const fn2 = context && context.helpers && typeof context.helpers.loadModule === "function" ? context.helpers.loadModule : null;
           if (!fn2)
             throw new Error("__hook_import_with unavailable: helpers.loadModule not available");
-          return await fn2(spec, fromFile);
+          const result = await fn2(spec, fromFile);
+          console.error("[WebModuleLoader] __hook_import_with resolved successfully for", spec, "result keys:", Object.keys(result || {}));
+          return result;
         } catch (e) {
-          console.error("[WebModuleLoader] __hook_import_with failed for", spec, "from", fromFile, e);
+          console.error("[WebModuleLoader] __hook_import_with failed for", spec, "from", fromFile, "error:", e instanceof Error ? e.message : e);
           throw e;
         }
       };
       const perModuleAlias = `const __hook_import = (spec) => (globalThis.__hook_import_with ? globalThis.__hook_import_with(String(spec), ${JSON.stringify(filename)}) : Promise.reject(new Error('__hook_import_with not available')));
 `;
-      const looksLikeESM = /\bexport\b/.test(code);
+      const __effectiveUrl = fetchUrl || `${globalThis.location?.origin || "http://localhost"}${filename}`;
+      const __codePatched = code.replace(/\bimport\.meta\.url\b/g, JSON.stringify(__effectiveUrl));
+      console.debug("[WebModuleLoader] executeModule: filename", filename, "has export?", /\bexport\b/.test(code), "has marker?", /\/\*__ESM__\*\//.test(code));
+      const looksLikeESM = /\/\*__ESM__\*\//.test(code) || /\bexport\b/.test(code);
       if (looksLikeESM) {
         try {
+          console.error("[WebModuleLoader] Using ESM execution path for", filename);
           const dirname = filename.substring(0, filename.lastIndexOf("/") || 0);
           const url = fetchUrl || `${globalThis.location?.origin || "http://localhost"}${filename}`;
           globalThis.__relay_meta = { filename, dirname, url };
-          const blob = new Blob([perModuleAlias, code], { type: "text/javascript" });
+          const blob = new Blob([perModuleAlias, __codePatched], { type: "text/javascript" });
           const blobUrl = URL.createObjectURL(blob);
           window.__hook_react = context.React;
-          const createJsxFactory = (React7) => {
-            if (!React7)
+          const createJsxFactory = (React5) => {
+            if (!React5)
               return void 0;
-            const shouldLogJsx = (() => {
-              try {
-                const g2 = globalThis;
-                return !!g2.__HOOK_DEBUG || typeof localStorage !== "undefined" && localStorage.getItem("hookDebug") === "1";
-              } catch {
-                return false;
-              }
-            })();
             const elementType = (() => {
               try {
-                if (React7 && typeof React7.createElement === "function") {
-                  const el = React7.createElement("div", null);
+                if (React5 && typeof React5.createElement === "function") {
+                  const el = React5.createElement("div", null);
                   if (el && el.$$typeof)
                     return el.$$typeof;
                 }
@@ -32440,19 +32139,6 @@ var WebModuleLoader = class {
               }
               return Symbol.for("react.element");
             })();
-            const logJsx = (kind, type, key2, props) => {
-              if (!shouldLogJsx)
-                return;
-              try {
-                const typeName = typeof type === "string" ? type : type && (type.displayName || type.name) || "anonymous";
-                const children = props ? props.children : void 0;
-                const childType = Array.isArray(children) ? "array" : children === null ? "null" : typeof children;
-                const childSummary = Array.isArray(children) ? `[${children.length} items]` : children && typeof children === "object" ? children && children["$$typeof"] ? "react.element" : "object" : children;
-                const keys = props ? Object.keys(props) : [];
-                console.debug(`[jsx/${kind}]`, { type: typeName, key: key2, childType, childSummary, propsKeys: keys });
-              } catch {
-              }
-            };
             return (type, config, maybeKey) => {
               let key2 = null;
               let ref = null;
@@ -32471,7 +32157,6 @@ var WebModuleLoader = class {
                   }
                 }
               }
-              logJsx("prod", type, key2, props);
               if (typeof type === "string" && context.onElement) {
                 try {
                   context.onElement(type, props);
@@ -32495,18 +32180,15 @@ var WebModuleLoader = class {
           window.__Fragment = fragmentFactory2;
           window.__hook_file_renderer = context && context.FileRenderer || null;
           window.__hook_helpers = context && context.helpers || {};
-          console.log("[WebModuleLoader] Set globals before blob import:", {
-            hasReact: !!window.__hook_react,
-            hasJsxRuntime: !!window.__hook_jsx_runtime,
-            hasFileRenderer: !!window.__hook_file_renderer,
-            hasHelpers: !!window.__hook_helpers,
-            filename,
-            fetchUrl
-          });
           await new Promise((resolve) => setTimeout(resolve, 0));
           window.__currentModulePath = filename;
           const dynImport = new Function("u", "return import(u)");
           const ns = await dynImport(blobUrl);
+          try {
+            const keys = Object.keys(ns || {});
+            console.debug("[WebModuleLoader] ESM module namespace keys:", keys, "default type:", typeof (ns && ns.default));
+          } catch {
+          }
           setTimeout(() => URL.revokeObjectURL(blobUrl), 1e3);
           const normalized = ns && ns.default ? { ...ns, default: ns.default } : ns;
           return normalized;
@@ -32518,7 +32200,7 @@ var WebModuleLoader = class {
       const fn = new Function("require", "module", "exports", "context", `
 try {
   ${perModuleAlias}
-  ${code}
+  ${__codePatched}
 } catch (err) {
   console.error('[WebModuleLoader] Code execution error in ${filename}:', err.message || err);
   throw err;
@@ -32526,50 +32208,22 @@ try {
         `);
       window.__currentModulePath = filename;
       fn((spec) => {
-        if (spec === "react") {
+        if (spec === "react")
           return context.React || {};
-        }
-        if (spec === "@clevertree/helpers") {
+        if (spec === "@clevertree/helpers")
           return context.helpers || {};
-        }
-        if (spec === "@clevertree/file-renderer") {
+        if (spec === "@clevertree/file-renderer")
           return context.FileRenderer || (() => null);
-        }
-        if (spec === "@clevertree/layout") {
+        if (spec === "@clevertree/layout")
           return context.Layout || null;
-        }
-        if (spec === "@clevertree/markdown") {
-          return context.__relay_builtins?.["@clevertree/markdown"] || globalThis.__relay_builtins?.["@clevertree/markdown"] || {};
-        }
-        if (spec === "@clevertree/theme") {
-          return context.__relay_builtins?.["@clevertree/theme"] || globalThis.__relay_builtins?.["@clevertree/theme"] || {};
-        }
-        if (spec === "@clevertree/meta") {
+        if (spec === "@clevertree/markdown")
+          return globalThis.__relay_builtins?.["@clevertree/markdown"] || {};
+        if (spec === "@clevertree/theme")
+          return globalThis.__relay_builtins?.["@clevertree/theme"] || {};
+        if (spec === "@clevertree/meta")
           return globalThis.__relay_meta || { filename: "", dirname: "", url: "" };
-        }
         if (spec === "react/jsx-runtime") {
           const r2 = context.React || globalThis.__hook_react || globalThis.React || {};
-          const shouldLogJsx = (() => {
-            try {
-              const g2 = globalThis;
-              return !!g2.__HOOK_DEBUG || typeof localStorage !== "undefined" && localStorage.getItem("hookDebug") === "1";
-            } catch {
-              return false;
-            }
-          })();
-          const logJsx = (kind, type, key2, props) => {
-            if (!shouldLogJsx)
-              return;
-            try {
-              const typeName = typeof type === "string" ? type : type && (type.displayName || type.name) || "anonymous";
-              const children = props ? props.children : void 0;
-              const childType = Array.isArray(children) ? "array" : children === null ? "null" : typeof children;
-              const childSummary = Array.isArray(children) ? `[${children.length} items]` : children && typeof children === "object" ? children && children["$$typeof"] ? "react.element" : "object" : children;
-              const keys = props ? Object.keys(props) : [];
-              console.debug(`[jsx/${kind}]`, { type: typeName, key: key2, childType, childSummary, propsKeys: keys });
-            } catch {
-            }
-          };
           const jsxFactory = (type, config, maybeKey) => {
             let key2 = null;
             let ref = null;
@@ -32585,21 +32239,18 @@ try {
               }
               return Symbol.for("react.element");
             })();
-            if (maybeKey !== void 0) {
+            if (maybeKey !== void 0)
               key2 = String(maybeKey);
-            }
             if (config) {
               for (let propName in config) {
-                if (propName === "key") {
+                if (propName === "key")
                   key2 = String(config.key);
-                } else if (propName === "ref") {
+                else if (propName === "ref")
                   ref = config.ref;
-                } else {
+                else
                   props[propName] = config[propName];
-                }
               }
             }
-            logJsx("shim", type, key2, props);
             return {
               "$$typeof": elementType,
               type,
@@ -32608,42 +32259,17 @@ try {
               props
             };
           };
-          return {
-            jsx: jsxFactory,
-            jsxs: jsxFactory,
-            Fragment: r2.Fragment
-          };
+          return { jsx: jsxFactory, jsxs: jsxFactory, Fragment: r2.Fragment };
         }
         return {};
       }, module, exports, context);
-      const createJsxFactory2 = (React7) => {
-        if (!React7)
+      const createJsxFactory2 = (React5) => {
+        if (!React5)
           return void 0;
-        const shouldLogJsx = (() => {
-          try {
-            const g2 = globalThis;
-            return !!g2.__HOOK_DEBUG || typeof localStorage !== "undefined" && localStorage.getItem("hookDebug") === "1";
-          } catch {
-            return false;
-          }
-        })();
-        const logJsx = (kind, type, key2, props) => {
-          if (!shouldLogJsx)
-            return;
-          try {
-            const typeName = typeof type === "string" ? type : type && (type.displayName || type.name) || "anonymous";
-            const children = props ? props.children : void 0;
-            const childType = Array.isArray(children) ? "array" : children === null ? "null" : typeof children;
-            const childSummary = Array.isArray(children) ? `[${children.length} items]` : children && typeof children === "object" ? children && children["$$typeof"] ? "react.element" : "object" : children;
-            const keys = props ? Object.keys(props) : [];
-            console.debug(`[jsx/func]`, { type: typeName, key: key2, childType, childSummary, propsKeys: keys });
-          } catch {
-          }
-        };
         const elementType = (() => {
           try {
-            if (React7 && typeof React7.createElement === "function") {
-              const el = React7.createElement("div", null);
+            if (React5 && typeof React5.createElement === "function") {
+              const el = React5.createElement("div", null);
               if (el && el.$$typeof)
                 return el.$$typeof;
             }
@@ -32655,21 +32281,18 @@ try {
           let key2 = null;
           let ref = null;
           let props = {};
-          if (maybeKey !== void 0) {
+          if (maybeKey !== void 0)
             key2 = String(maybeKey);
-          }
           if (config) {
             for (let propName in config) {
-              if (propName === "key") {
+              if (propName === "key")
                 key2 = String(config.key);
-              } else if (propName === "ref") {
+              else if (propName === "ref")
                 ref = config.ref;
-              } else {
+              else
                 props[propName] = config[propName];
-              }
             }
           }
-          logJsx("func", type, key2, props);
           if (typeof type === "string" && context.onElement) {
             try {
               context.onElement(type, props);
@@ -32701,7 +32324,10 @@ try {
         globalThis.__Fragment = fragmentFactory;
       }
       const mod = module.exports;
-      if (!mod || typeof mod.default !== "function") {
+      if (isMainHook && (!mod || typeof mod.default !== "function")) {
+        if (mod && (typeof mod === "object" || typeof mod === "function")) {
+          return mod;
+        }
         throw new Error("Hook module does not export a default function");
       }
       return mod;
@@ -32737,30 +32363,6 @@ async function transpileCode(code, options2, _toCommonJs = false) {
   const g2 = typeof globalThis !== "undefined" ? globalThis : {};
   const wasmTranspile = g2.__hook_transpile_jsx;
   const version = g2.__hook_transpiler_version || "unknown";
-  const forceServer = !!g2.__forceServerTranspile;
-  if (forceServer) {
-    try {
-      const resp = await fetch("/api/transpile", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code, filename, to_common_js: false })
-      });
-      if (!resp.ok) {
-        const txt = await resp.text().catch(() => "");
-        throw new Error(`ServerTranspileError: ${resp.status} ${resp.statusText} ${txt}`);
-      }
-      const data = await resp.json();
-      if (!data?.ok || !data?.code) {
-        throw new Error(`ServerTranspileError: ${data?.diagnostics || "unknown error"}`);
-      }
-      const out3 = String(data.code);
-      const rewritten = applyHookRewrite(out3.replace(/\bimport\s*\(/g, "context.helpers.loadModule("));
-      return rewritten + `
-//# sourceURL=${filename}`;
-    } catch (e) {
-      throw e;
-    }
-  }
   if (typeof wasmTranspile !== "function") {
     const availableKeys = Object.keys(g2).filter((k) => k.startsWith("__")).join(", ");
     console.error("[transpileCode] WASM not ready:", {
@@ -32769,109 +32371,22 @@ async function transpileCode(code, options2, _toCommonJs = false) {
       type: typeof wasmTranspile,
       globalKeys: availableKeys || "(none)"
     });
-    if (g2.__allowServerTranspile) {
-      console.warn("[transpileCode] WASM not ready; attempting server fallback /api/transpile");
-      try {
-        const resp = await fetch("/api/transpile", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ code, filename, to_common_js: false })
-        });
-        if (!resp.ok) {
-          const txt = await resp.text().catch(() => "");
-          throw new Error(`ServerTranspileError: ${resp.status} ${resp.statusText} ${txt}`);
-        }
-        const data = await resp.json();
-        if (!data?.ok || !data?.code) {
-          throw new Error(`ServerTranspileError: ${data?.diagnostics || "unknown error"}`);
-        }
-        const out3 = String(data.code);
-        const rewritten = applyHookRewrite(out3.replace(/\bimport\s*\(/g, "context.helpers.loadModule("));
-        return rewritten + `
-//# sourceURL=${filename}`;
-      } catch (e) {
-        console.error("[transpileCode] Server fallback failed:", e);
-      }
-    }
     throw new Error(`HookTranspiler WASM not loaded (v${version}): expected globalThis.__hook_transpile_jsx(source, filename)`);
   }
-  let pragmaFn = "h";
-  let pragmaFragFn = "React.Fragment";
-  const pragmaMatch = code.match(/\/\*+\s*@jsx\s+([\w.]+)\s*\*+\//);
-  const pragmaFragMatch = code.match(/\/\*+\s*@jsxFrag\s+([\w.]+)\s*\*+\//);
-  if (pragmaMatch && pragmaMatch[1])
-    pragmaFn = pragmaMatch[1];
-  if (pragmaFragMatch && pragmaFragMatch[1])
-    pragmaFragFn = pragmaFragMatch[1];
-  const preamble = ``;
-  const codeWithPreamble = preamble + code;
   let out2;
   try {
-    out2 = await wasmTranspile(codeWithPreamble, filename, options2.isTypescript);
+    out2 = await wasmTranspile(code, filename, options2.isTypescript);
   } catch (callError) {
     console.error("[transpileCode] WASM call threw exception:", callError);
-    if (g2.__allowServerTranspile) {
-      console.warn("[transpileCode] Attempting server fallback due to WASM exception");
-      try {
-        const resp = await fetch("/api/transpile", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ code, filename, to_common_js: false })
-        });
-        if (!resp.ok) {
-          const txt = await resp.text().catch(() => "");
-          throw new Error(`ServerTranspileError: ${resp.status} ${resp.statusText} ${txt}`);
-        }
-        const data = await resp.json();
-        if (!data?.ok || !data?.code) {
-          throw new Error(`ServerTranspileError: ${data?.diagnostics || "unknown error"}`);
-        }
-        const out3 = String(data.code);
-        const rewritten = applyHookRewrite(out3.replace(/\bimport\s*\(/g, "context.helpers.loadModule("));
-        return rewritten + `
-//# sourceURL=${filename}`;
-      } catch (e) {
-        console.error("[transpileCode] Server fallback failed after WASM exception:", e);
-      }
-    }
     throw callError;
   }
   let transpiledCode;
   if (typeof out2 === "object" && out2 !== null) {
     if (out2.error) {
       const errorMsg = `TranspileError: ${filename}: ${out2.error} (v${version})`;
-      console.error("[transpileCode] JSX transpilation failed:", {
-        filename,
-        inputSize: code.length,
-        errorMessage: errorMsg,
-        codePreview: code.substring(0, 200)
-      });
+      console.error("[transpileCode] JSX transpilation failed:", { filename, inputSize: code.length, errorMessage: errorMsg });
       globalThis.__lastTranspiledCode = null;
       globalThis.__lastTranspileError = errorMsg;
-      if (g2.__allowServerTranspile) {
-        console.warn("[transpileCode] WASM returned error; attempting server fallback");
-        try {
-          const resp = await fetch("/api/transpile", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ code, filename, to_common_js: false })
-          });
-          if (!resp.ok) {
-            const txt = await resp.text().catch(() => "");
-            throw new Error(`ServerTranspileError: ${resp.status} ${resp.statusText} ${txt}`);
-          }
-          const data = await resp.json();
-          if (!data?.ok || !data?.code) {
-            throw new Error(`ServerTranspileError: ${data?.diagnostics || "unknown error"}`);
-          }
-          transpiledCode = String(data.code);
-          const rewritten = transpiledCode.replace(/\bimport\s*\(/g, "context.helpers.loadModule(");
-          return rewritten + `
-//# sourceURL=${filename}`;
-        } catch (e) {
-          console.error("[transpileCode] Server fallback failed after WASM error:", e);
-        }
-      }
       throw new Error(errorMsg);
     }
     if (!out2.code) {
@@ -32883,53 +32398,73 @@ async function transpileCode(code, options2, _toCommonJs = false) {
   } else {
     throw new Error(`HookTranspiler returned unexpected type: ${typeof out2}`);
   }
-  if (transpiledCode.startsWith("TranspileError:")) {
-    const errorMsg = `${transpiledCode} (v${version})`;
-    console.error("[transpileCode] JSX transpilation failed:", {
-      filename,
-      inputSize: code.length,
-      errorMessage: errorMsg,
-      codePreview: code.substring(0, 200)
-    });
-    globalThis.__lastTranspiledCode = transpiledCode;
-    globalThis.__lastTranspileError = errorMsg;
-    if (g2.__allowServerTranspile) {
-      console.warn("[transpileCode] WASM returned TranspileError; attempting server fallback");
-      try {
-        const resp = await fetch("/api/transpile", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ code, filename, to_common_js: false })
-        });
-        if (!resp.ok) {
-          const txt = await resp.text().catch(() => "");
-          throw new Error(`ServerTranspileError: ${resp.status} ${resp.statusText} ${txt}`);
-        }
-        const data = await resp.json();
-        if (!data?.ok || !data?.code) {
-          throw new Error(`ServerTranspileError: ${data?.diagnostics || "unknown error"}`);
-        }
-        transpiledCode = String(data.code);
-        const rewritten = transpiledCode.replace(/\bimport\s*\(/g, "context.helpers.loadModule(");
-        return rewritten + `
-//# sourceURL=${filename}`;
-      } catch (e) {
-        console.error("[transpileCode] Server fallback failed after TranspileError:", e);
-      }
-    }
-    throw new Error(errorMsg);
-  }
   ;
   globalThis.__lastTranspiledCode = transpiledCode;
-  const stillHasJsx = /<[A-Z]/.test(transpiledCode);
-  if (stillHasJsx) {
-    console.warn("[transpileCode] WARNING: Output still contains JSX syntax! Transpilation may have failed silently.");
-    console.warn("[transpileCode] Transpiled code available at: window.__lastTranspiledCode");
-  } else if (transpiledCode.includes("React.createElement(")) {
-    console.log("[transpileCode] \u2713 Output contains React.createElement() calls - transpilation successful");
-  }
   return applyHookRewrite(transpiledCode + `
 //# sourceURL=${filename}`);
+}
+function parseStaticImports(code) {
+  const imports = [];
+  const importRe = /import\s+((?:[^"']+)\s+from\s+)?['"]([^"']+)['"]\s*;?/g;
+  let match;
+  while ((match = importRe.exec(code)) !== null) {
+    const statement = match[0];
+    const beforeFrom = match[1] || "";
+    const specifier = match[2];
+    if (specifier.startsWith("@clevertree/") || specifier === "react" || specifier === "react/jsx-runtime")
+      continue;
+    if (!specifier.startsWith("./") && !specifier.startsWith("../") && !specifier.startsWith("/"))
+      continue;
+    let bindings = beforeFrom.replace(/\s+from\s*$/, "").trim();
+    let isDefault = false;
+    let isNamespace = false;
+    if (/^\*\s+as\s+\w+$/.test(bindings)) {
+      isNamespace = true;
+    } else if (bindings && !bindings.includes("{")) {
+      isDefault = true;
+    }
+    imports.push({ statement, specifier, bindings, isDefault, isNamespace });
+  }
+  return imports;
+}
+async function resolveStaticImports(code, filename, context) {
+  const imports = parseStaticImports(code);
+  if (imports.length === 0)
+    return code;
+  const loadModule = context?.helpers?.loadModule;
+  if (!loadModule)
+    return code;
+  const modules = /* @__PURE__ */ new Map();
+  await Promise.all(imports.map(async (imp) => {
+    const mod = await loadModule(imp.specifier, filename);
+    modules.set(imp.specifier, mod);
+  }));
+  let rewritten = code;
+  for (const imp of imports) {
+    const mod = modules.get(imp.specifier);
+    const varName = `__import_${Math.random().toString(36).substr(2, 9)}`;
+    globalThis[varName] = mod;
+    let replacement = "";
+    if (imp.isNamespace) {
+      const nsName = imp.bindings.replace(/^\*\s+as\s+/, "");
+      replacement = `const ${nsName} = globalThis.${varName};`;
+    } else if (imp.isDefault) {
+      const defaultName = imp.bindings.split(",")[0].trim();
+      replacement = `const ${defaultName} = (globalThis.${varName}?.default || globalThis.${varName});`;
+    } else {
+      const destructure = imp.bindings.replace(/^\{|\}$/g, "").trim().replace(/\bas\b/g, ":");
+      replacement = `const { ${destructure} } = (globalThis.${varName} || {});`;
+    }
+    rewritten = rewritten.replace(imp.statement, replacement);
+  }
+  return rewritten;
+}
+function rewriteDynamicImports(code) {
+  try {
+    return code.replace(/\bimport\s*\(/g, "__hook_import(");
+  } catch {
+    return code;
+  }
 }
 function applyHookRewrite(code) {
   const mkBuiltin = (spec, destructure) => `const ${destructure} = ((globalThis && globalThis.__relay_builtins && globalThis.__relay_builtins['${spec}']) || {});`;
@@ -32938,12 +32473,19 @@ function applyHookRewrite(code) {
   const metaRe = /import\s+(\w+)\s+from\s+['"]@clevertree\/meta['"];?/g;
   const metaStarRe = /import\s*\*\s*as\s+(\w+)\s+from\s+['"]@clevertree\/meta['"];?/g;
   const metaDestructureRe = /import\s+\{\s*([^}]+)\s*\}\s+from\s+['"]@clevertree\/meta['"];?/g;
-  const reactRe = /import\s+React\s+from\s+['"]react['"];?/g;
+  const reactRe = /import\s+React\s*(?:,\s*\{([^}]+)\})?\s+from\s+['"]react['"];?/g;
+  const reactNamedOnlyRe = /import\s+\{([^}]+)\}\s+from\s+['"]react['"];?/g;
   const reactStarRe = /import\s*\*\s*as\s+React\s+from\s+['"]react['"];?/g;
   const jsxRuntimeRe = /import\s+\{\s*jsx\s+as\s+(_jsx)\s*,\s*jsxs\s+as\s+(_jsxs)\s*,\s*Fragment\s+as\s+(_Fragment)\s*\}\s+from\s+['"]react\/jsx-runtime['"];?/g;
   let rewritten = code.replace(markdownRe, mkBuiltin("@clevertree/markdown", "{ MarkdownRenderer }"));
   rewritten = rewritten.replace(themeRe, mkBuiltin("@clevertree/theme", "{ registerThemesFromYaml }"));
-  rewritten = rewritten.replace(reactRe, "const React = (globalThis.__hook_react || globalThis.React);");
+  rewritten = rewritten.replace(reactRe, (_m, named) => {
+    let res = "const React = (globalThis.__hook_react || globalThis.React);";
+    if (named)
+      res += ` const { ${named} } = React;`;
+    return res;
+  });
+  rewritten = rewritten.replace(reactNamedOnlyRe, (_m, named) => `const { ${named} } = (globalThis.__hook_react || globalThis.React);`);
   rewritten = rewritten.replace(reactStarRe, "const React = (globalThis.__hook_react || globalThis.React);");
   rewritten = rewritten.replace(metaRe, (_m, name) => `const ${name} = (globalThis.__relay_meta || { filename: '', dirname: '', url: '' });`);
   rewritten = rewritten.replace(metaStarRe, (_m, name) => `const ${name} = (globalThis.__relay_meta || { filename: '', dirname: '', url: '' });`);
@@ -32979,23 +32521,13 @@ var HookLoader = class {
       return {};
     return { ...builder() };
   }
-  /**
-   * Load a module from the peer/repo, with optional transpilation
-   * @param modulePath Relative or absolute path to module
-   * @param fromPath Current hook path for resolving relative imports
-   * @param context Hook context for module execution
-   * @returns Module exports
-   */
   async loadModule(modulePath, fromPath = "/hooks/client/get-client.jsx", context) {
+    try {
+      console.error("[HookLoader] loadModule called:", { modulePath, fromPath });
+    } catch {
+    }
     let normalizedPath = modulePath;
     try {
-      const dbg = globalThis.__HOOK_DEBUG || typeof localStorage !== "undefined" && localStorage.getItem("hookDebug") === "1";
-      if (dbg) {
-        try {
-          console.debug("[HookLoader.loadModule] start", { modulePath, fromPath });
-        } catch {
-        }
-      }
       if (modulePath.startsWith("./") || modulePath.startsWith("../")) {
         const base = fromPath && fromPath.startsWith("/") ? fromPath : "/hooks/client/get-client.jsx";
         const baseUrl = new URL(base, "http://resolver.local");
@@ -33007,103 +32539,128 @@ var HookLoader = class {
       const parts = normalizedPath.split("/").filter(Boolean);
       const normalized = [];
       for (const part of parts) {
-        if (part === "..") {
+        if (part === "..")
           normalized.pop();
-        } else if (part !== ".") {
+        else if (part !== ".")
           normalized.push(part);
-        }
       }
       normalizedPath = "/" + normalized.join("/");
-      if (dbg) {
-        try {
-          console.debug("[HookLoader.loadModule] normalized", { modulePath, fromPath, normalizedPath });
-        } catch {
-        }
-      }
     } catch (_) {
       const baseDir = (fromPath || "/hooks/client/get-client.jsx").split("/").slice(0, -1).join("/") || "/hooks/client";
       const combined = `${baseDir}/${modulePath}`;
       const parts = combined.split("/").filter(Boolean);
       const normalized = [];
       for (const part of parts) {
-        if (part === "..") {
+        if (part === "..")
           normalized.pop();
-        } else if (part !== ".") {
+        else if (part !== ".")
           normalized.push(part);
-        }
       }
       normalizedPath = "/" + normalized.join("/");
-      try {
-        const dbg2 = globalThis.__HOOK_DEBUG || typeof localStorage !== "undefined" && localStorage.getItem("hookDebug") === "1";
-        if (dbg2)
-          console.debug("[HookLoader.loadModule] normalized (fallback)", { modulePath, fromPath, normalizedPath });
-      } catch {
-      }
     }
     const cacheKey = `${this.host}:${normalizedPath}`;
-    if (this.moduleCache.has(cacheKey)) {
+    if (this.moduleCache.has(cacheKey))
       return this.moduleCache.get(cacheKey);
-    }
-    const moduleUrl = `${this.protocol}://${this.host}${normalizedPath}`;
     const requestHeaders = this.buildRequestHeaders(context);
     const fetchOptions = Object.keys(requestHeaders).length ? { headers: requestHeaders } : void 0;
+    const buildAttempts = (pathIn) => {
+      const q = pathIn.indexOf("?");
+      const h = pathIn.indexOf("#");
+      const cut = q >= 0 && h >= 0 ? Math.min(q, h) : q >= 0 ? q : h;
+      const suffix = cut >= 0 ? pathIn.slice(cut) : "";
+      const basePath = cut >= 0 ? pathIn.slice(0, cut) : pathIn;
+      const last = basePath.split("/").pop() || "";
+      const hasExt = last.includes(".");
+      const attempts = [];
+      attempts.push(basePath + suffix);
+      if (!hasExt) {
+        attempts.push(basePath + ".js" + suffix);
+        const dirname = basePath.includes("/") ? basePath.slice(0, basePath.lastIndexOf("/")) : ".";
+        attempts.push(dirname + "/index.js" + suffix);
+      }
+      return attempts;
+    };
     try {
-      const response = await fetch(moduleUrl, fetchOptions);
-      if (!response.ok) {
-        throw new Error(`ModuleLoadError: ${moduleUrl} \u2192 ${response.status} ${response.statusText}`);
+      let lastErr = null;
+      let code = null;
+      let moduleUrl = null;
+      const attempts = buildAttempts(normalizedPath);
+      console.error("[HookLoader.loadModule] Fetch attempts:", { modulePath, normalizedPath, attempts });
+      for (const candidate of attempts) {
+        const url = `${this.protocol}://${this.host}${candidate}`;
+        console.error("[HookLoader] Loop iteration for candidate:", candidate, "total attempts:", attempts.length);
+        try {
+          console.error("[HookLoader.loadModule] Trying:", url);
+          const response = await fetch(url, fetchOptions);
+          if (!response.ok) {
+            lastErr = new Error(`ModuleLoadError: ${url} \u2192 ${response.status} ${response.statusText}`);
+            console.error("[HookLoader.loadModule] Not OK, continuing");
+            continue;
+          }
+          const ct = (response.headers.get("content-type") || "").toLowerCase();
+          if (ct.includes("text/html")) {
+            lastErr = new Error(`ModuleLoadError: ${url} returned HTML (content-type=${ct})`);
+            console.error("[HookLoader.loadModule] HTML response, continuing");
+            continue;
+          }
+          code = await response.text();
+          console.error("[HookLoader.loadModule] Fetched", candidate, "got", code.length, "bytes");
+          moduleUrl = url;
+          console.error("[HookLoader.loadModule] Success:", url, "code length:", code.length);
+          break;
+        } catch (e) {
+          lastErr = e;
+          console.error("[HookLoader.loadModule] Fetch error, continuing:", e);
+          continue;
+        }
       }
-      const ct = (response.headers.get("content-type") || "").toLowerCase();
-      if (ct.includes("text/html")) {
-        throw new Error(`ModuleLoadError: ${moduleUrl} returned HTML (content-type=${ct})`);
+      if (!code || !moduleUrl)
+        throw lastErr || new Error(`ModuleLoadError: ${this.protocol}://${this.host}${normalizedPath}`);
+      console.error("[HookLoader.loadModule] After loop:", { codeLengthOrNull: code ? code.length : null, moduleUrl });
+      let preprocessedCode = code;
+      try {
+        preprocessedCode = await resolveStaticImports(code, normalizedPath, context);
+        if (modulePath.includes("nested")) {
+          console.error("[HookLoader] TEST: nested module loaded and resolved, code length:", code.length);
+        }
+      } catch (resolveErr) {
+        console.warn("[RuntimeLoader] Static import resolution failed:", resolveErr);
       }
-      const code = await response.text();
-      let finalCode = code;
-      const shouldTranspile = !!this.transpiler || looksLikeTsOrJsx(code, normalizedPath);
+      let finalCode = preprocessedCode;
+      const esmHint = /\bexport\s+default\b/.test(preprocessedCode) || /\bimport\s*\(/.test(preprocessedCode);
+      const shouldTranspile = !!this.transpiler || looksLikeTsOrJsx(preprocessedCode, normalizedPath);
       if (shouldTranspile) {
         try {
           if (this.transpiler) {
-            finalCode = await this.transpiler(code, normalizedPath);
+            finalCode = await this.transpiler(preprocessedCode, normalizedPath);
             this.logTranspileResult(normalizedPath, finalCode);
           } else {
-            finalCode = await transpileCode(
-              code,
-              { filename: normalizedPath },
-              false
-              // Web uses import, not CommonJS
-            );
+            finalCode = await transpileCode(preprocessedCode, { filename: normalizedPath }, false);
           }
         } catch (err) {
           const msg = err?.message || String(err);
-          const diag = {
-            phase: "transform",
-            error: msg,
-            details: { moduleUrl, filename: normalizedPath, ...err }
-          };
+          const diag = { phase: "transform", error: msg, details: { moduleUrl, filename: normalizedPath, ...err } };
           this.onDiagnostics(diag);
           throw new Error(`TranspileError: ${normalizedPath}: ${msg}`);
         }
       }
+      finalCode = rewriteDynamicImports(finalCode);
+      if (esmHint)
+        finalCode = `/*__ESM__*/
+` + finalCode;
       let mod;
       try {
-        mod = await this.moduleLoader.executeModule(finalCode, normalizedPath, context, moduleUrl);
+        mod = await this.moduleLoader.executeModule(finalCode, normalizedPath, context, moduleUrl, false);
+        try {
+          const keys = Object.keys(mod || {});
+          console.error("[HookLoader] Loaded module", normalizedPath, "keys:", keys, "default type:", typeof (mod && mod.default));
+        } catch {
+        }
       } catch (execErr) {
         const execMsg = execErr?.message || String(execErr);
         const syntaxMatch = execMsg.match(/Unexpected token|missing \)|SyntaxError/);
-        const diag = {
-          phase: "import",
-          error: execMsg,
-          details: {
-            filename: normalizedPath,
-            isSyntaxError: !!syntaxMatch,
-            transpilerVersion: globalThis.__hook_transpiler_version || "unknown"
-          }
-        };
-        console.error("[RuntimeLoader] Module execution failed:", {
-          filename: normalizedPath,
-          error: execMsg,
-          isSyntaxError: !!syntaxMatch,
-          transpilerVersion: globalThis.__hook_transpiler_version
-        });
+        const diag = { phase: "import", error: execMsg, details: { filename: normalizedPath, isSyntaxError: !!syntaxMatch, transpilerVersion: globalThis.__hook_transpiler_version || "unknown" } };
+        console.error("[RuntimeLoader] Module execution failed:", { filename: normalizedPath, error: execMsg, isSyntaxError: !!syntaxMatch, transpilerVersion: globalThis.__hook_transpiler_version });
         this.onDiagnostics(diag);
         throw execErr;
       }
@@ -33114,12 +32671,6 @@ var HookLoader = class {
       throw err;
     }
   }
-  /**
-   * Load and execute a hook module
-   * @param hookPath Path to the hook module (from OPTIONS)
-   * @param context The hook context to pass
-   * @returns Executed hook element/result
-   */
   async loadAndExecuteHook(hookPath, context) {
     const diag = { phase: "init" };
     try {
@@ -33138,21 +32689,19 @@ var HookLoader = class {
         throw fetchErr;
       }
       console.debug(`[HookLoader] Received hook code (${code.length} chars)`);
-      diag.fetch = {
-        status: response.status,
-        ok: response.ok,
-        contentType: response.headers.get("content-type")
-      };
-      if (!response.ok) {
+      diag.fetch = { status: response.status, ok: response.ok, contentType: response.headers.get("content-type") };
+      if (!response.ok)
         throw new Error(`ModuleLoadError: ${hookUrl} \u2192 ${response.status} ${response.statusText}`);
-      }
       const ct = (response.headers.get("content-type") || "").toLowerCase();
-      if (ct.includes("text/html")) {
+      if (ct.includes("text/html"))
         throw new Error(`ModuleLoadError: ${hookUrl} returned HTML (content-type=${ct})`);
-      }
       diag.codeLength = code.length;
+      console.error(`[HookLoader] About to resolve static imports for ${hookPath}`);
+      code = await resolveStaticImports(code, hookPath, context);
+      console.error(`[HookLoader] Static imports resolved for ${hookPath}`);
       diag.phase = "transform";
       let finalCode = code;
+      const esmHint = /\bexport\s+default\b/.test(code) || /\bimport\s*\(/.test(code);
       const shouldTranspile = !!this.transpiler || looksLikeTsOrJsx(code, hookPath);
       if (shouldTranspile) {
         try {
@@ -33161,12 +32710,7 @@ var HookLoader = class {
             finalCode = await this.transpiler(code, hookPath);
             this.logTranspileResult(hookPath, finalCode);
           } else {
-            finalCode = await transpileCode(
-              code,
-              { filename: hookPath, hasJsxPragma: /@jsx\s+h/m.test(code) },
-              false
-              // Web uses dynamic import
-            );
+            finalCode = await transpileCode(code, { filename: hookPath, hasJsxPragma: /@jsx\s+h/m.test(code) }, false);
           }
           console.debug(`[HookLoader] Transpilation complete (${finalCode.length} chars)`);
         } catch (err) {
@@ -33179,17 +32723,31 @@ var HookLoader = class {
           throw new Error(`TranspileError: ${hookPath}: ${msg}`);
         }
       }
+      finalCode = rewriteDynamicImports(finalCode);
+      if (esmHint)
+        finalCode = `/*__ESM__*/
+` + finalCode;
+      try {
+        const sample = finalCode.slice(0, 200);
+        const hasExport = /\bexport\b/.test(finalCode);
+        const hasMarker = /\/\*__ESM__\*\//.test(finalCode);
+        console.error("[HookLoader] Final code ESM hint:", { esmHint, hasExport, hasMarker, sample });
+      } catch {
+      }
       diag.phase = "import";
       console.debug(`[HookLoader] Executing hook module`);
       try {
-        const mod = await this.moduleLoader.executeModule(finalCode, hookPath, context, hookUrl);
-        if (!mod || typeof mod.default !== "function") {
+        const mod = await this.moduleLoader.executeModule(finalCode, hookPath, context, hookUrl, true);
+        if (!mod || typeof mod.default !== "function")
           throw new Error("Hook module does not export a default function");
-        }
         diag.phase = "exec";
-        console.debug(`[HookLoader] Calling hook function`);
-        const element = await mod.default(context);
-        console.debug(`[HookLoader] Hook executed successfully`);
+        console.debug(`[HookLoader] Rendering hook component`);
+        const Comp = mod.default;
+        const createEl = context && context.createElement || context && context.React && context.React.createElement;
+        if (typeof createEl !== "function")
+          throw new Error("React createElement not available");
+        const element = createEl(Comp, context);
+        console.debug(`[HookLoader] Hook component element created`);
         return element;
       } catch (execErr) {
         console.error("[HookLoader] Hook execution error:", execErr);
@@ -33203,19 +32761,16 @@ var HookLoader = class {
       throw err;
     }
   }
-  /**
-   * Clear module cache (useful for hot reload or cleanup)
-   */
   clearCache() {
     this.moduleCache.clear();
   }
 };
 
-// ../../../hook-transpiler/dist/components/HookRenderer.js
+// ../../../hook-transpiler/dist/web/components/HookRenderer.js
 var import_jsx_runtime4 = __toESM(require_jsx_runtime(), 1);
 var import_react4 = __toESM(require_react(), 1);
 
-// ../../../hook-transpiler/dist/components/ErrorBoundary.js
+// ../../../hook-transpiler/dist/web/components/ErrorBoundary.js
 var import_jsx_runtime = __toESM(require_jsx_runtime(), 1);
 var import_react = __toESM(require_react(), 1);
 var ErrorBoundary = class extends import_react.default.Component {
@@ -33262,7 +32817,7 @@ var ErrorBoundary = class extends import_react.default.Component {
 };
 var ErrorBoundary_default = ErrorBoundary;
 
-// ../../../hook-transpiler/dist/components/MarkdownRenderer.js
+// ../../../hook-transpiler/dist/web/components/MarkdownRenderer.js
 var import_jsx_runtime2 = __toESM(require_jsx_runtime(), 1);
 
 // ../../../hook-transpiler/node_modules/markdown-to-jsx/dist/index.js
@@ -38150,7 +37705,7 @@ var PJ = ({ children: q, options: G, ...Y }) => {
 };
 var EY = PJ;
 
-// ../../../hook-transpiler/dist/components/MarkdownRenderer.js
+// ../../../hook-transpiler/dist/web/components/MarkdownRenderer.js
 var import_react2 = __toESM(require_react(), 1);
 function preprocessHtmlForMarkdown(content) {
   let processed = content;
@@ -38217,7 +37772,7 @@ function MarkdownRenderer({ content, navigate, onElement, overrides = {} }) {
   }, children: processedContent }) });
 }
 
-// ../../../hook-transpiler/dist/components/FileRenderer.js
+// ../../../hook-transpiler/dist/web/components/FileRenderer.js
 var import_jsx_runtime3 = __toESM(require_jsx_runtime(), 1);
 var import_react3 = __toESM(require_react(), 1);
 function FileRenderer({ content, contentType, onElement }) {
@@ -38252,7 +37807,7 @@ function FileRenderer({ content, contentType, onElement }) {
   return (0, import_jsx_runtime3.jsx)("pre", { children: content });
 }
 
-// ../../../hook-transpiler/dist/components/HookRenderer.js
+// ../../../hook-transpiler/dist/web/components/HookRenderer.js
 function normalizeHostUrl(host) {
   if (!host)
     return "";
@@ -38262,7 +37817,7 @@ function normalizeHostUrl(host) {
     return `http://${host}`;
   return `https://${host}`;
 }
-var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, renderCssIntoDom: renderCssIntoDom2, startAutoSync: startAutoSync2, stopAutoSync: stopAutoSync2, registerTheme: registerTheme2, loadThemesFromYamlUrl: loadThemesFromYamlUrl2, markdownOverrides }) => {
+var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, renderCssIntoDom: renderCssIntoDom2, startAutoSync: startAutoSync2, stopAutoSync: stopAutoSync2, registerTheme: registerTheme2, loadThemesFromYamlUrl: loadThemesFromYamlUrl2, markdownOverrides, onError, onReady, onLoading }) => {
   const [loading, setLoading] = (0, import_react4.useState)(false);
   const [wasmReady, setWasmReady] = (0, import_react4.useState)(!!globalThis.__hook_transpile_jsx);
   const [wasmError, setWasmError] = (0, import_react4.useState)(null);
@@ -38278,6 +37833,12 @@ var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, 
   (0, import_react4.useEffect)(() => {
     if (wasmReady)
       return;
+    if (onLoading) {
+      try {
+        onLoading();
+      } catch {
+      }
+    }
     let attempts = 0;
     const interval = setInterval(() => {
       attempts++;
@@ -38285,7 +37846,14 @@ var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, 
         setWasmReady(true);
         clearInterval(interval);
       } else if (attempts > 50) {
-        setWasmError("Hook transpiler (WASM) failed to initialize");
+        const msg = "Hook transpiler (WASM) failed to initialize";
+        setWasmError(msg);
+        if (onError) {
+          try {
+            onError(msg);
+          } catch {
+          }
+        }
         clearInterval(interval);
       }
     }, 100);
@@ -38433,6 +38001,12 @@ var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, 
     setLoading(true);
     setError(null);
     setElement(null);
+    if (onLoading) {
+      try {
+        onLoading();
+      } catch {
+      }
+    }
     try {
       const path2 = hookPath || "http://localhost:8002/hooks/client/get-client.jsx";
       if (!loaderRef.current)
@@ -38442,6 +38016,12 @@ var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, 
       setElement(el);
       if (renderCssIntoDom2)
         renderCssIntoDom2();
+      if (onReady) {
+        try {
+          onReady();
+        } catch {
+        }
+      }
     } catch (e) {
       console.error("[HookRenderer] Error loading/executing hook:", e);
       const message = e?.message || String(e);
@@ -38451,6 +38031,12 @@ var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, 
 Stack Trace:
 ${stack}` : message;
       setError(fullError);
+      if (onError) {
+        try {
+          onError(fullError);
+        } catch {
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -38469,92 +38055,36 @@ ${stack}` : message;
       }
     }
   }, [onElement, renderCssIntoDom2]);
-  return (0, import_jsx_runtime4.jsxs)("div", { style: { height: "100%", display: "flex", flexDirection: "column" }, children: [!wasmReady && !wasmError && (0, import_jsx_runtime4.jsx)("div", { children: "Initializing WASM transpiler..." }), wasmError && (0, import_jsx_runtime4.jsxs)("div", { style: { color: "orange" }, children: [(0, import_jsx_runtime4.jsx)("strong", { style: { marginRight: "0.25rem" }, children: "Warning:" }), " ", wasmError] }), wasmReady && loading && (0, import_jsx_runtime4.jsx)("div", { children: "Loading hook..." }), error && (0, import_jsx_runtime4.jsxs)("div", { style: { color: "red" }, children: [(0, import_jsx_runtime4.jsx)("strong", { style: { marginRight: "0.25rem" }, children: "Error:" }), " ", error] }), wasmReady && !loading && !error && element && (0, import_jsx_runtime4.jsx)(ErrorBoundary_default, { onElement: registerUsageFromElement, children: (0, import_jsx_runtime4.jsx)("div", { style: { flex: 1 }, children: element }) })] });
+  return (0, import_jsx_runtime4.jsxs)("div", { style: { height: "100%", display: "flex", flexDirection: "column" }, children: [!wasmReady && !wasmError && (0, import_jsx_runtime4.jsx)("div", { children: "Initializing WASM transpiler..." }), wasmReady && loading && (0, import_jsx_runtime4.jsx)("div", { children: "Loading hook..." }), (error || wasmError || element) && (0, import_jsx_runtime4.jsx)(ErrorBoundary_default, { initialError: error || wasmError, onElement: registerUsageFromElement, children: (0, import_jsx_runtime4.jsx)("div", { style: { flex: 1 }, children: element }) })] });
 };
+var HookRenderer_default = HookRenderer;
 
-// ../../../hook-transpiler/dist/index.js
-async function initWasmTranspiler() {
-  if (globalThis.__hook_transpile_jsx) {
-    return;
-  }
-  const isWeb = typeof globalThis.window !== "undefined";
-  const isNode2 = typeof process !== "undefined" && process.versions && process.versions.node;
-  if (!isWeb && !isNode2) {
-    console.debug("[hook-transpiler] Skipping WASM init in non-web/non-node environment");
-    return;
-  }
+// ../../../hook-transpiler/dist/web/index.js
+async function initHookTranspiler(wasmUrl) {
+  let mod;
+  let url;
   try {
-    const { default: init, transpile_jsx: transpile_jsx2, get_version: get_version3, run_self_test: run_self_test2 } = await Promise.resolve().then(() => (init_relay_hook_transpiler(), relay_hook_transpiler_exports));
-    let wasmPath;
-    try {
-      wasmPath = new URL("/wasm/relay_hook_transpiler_bg.wasm", window.location.origin).toString();
-    } catch (e) {
-      console.warn("[hook-transpiler] Failed to construct wasm path via URL, using fallback string");
-      wasmPath = "/wasm/relay_hook_transpiler_bg.wasm";
-    }
-    const wasmUrl = wasmPath;
-    if (isNode2 && typeof wasmUrl === "string" && wasmUrl.startsWith("file:")) {
-      const fs2 = await import("node:fs/promises");
-      const buffer = await fs2.readFile(new URL(wasmUrl));
-      await init({ module_or_path: buffer });
-    } else {
-      await init({ module_or_path: wasmUrl });
-    }
-    const transpileFn = (code, filename, isTypescript) => {
-      return transpile_jsx2(code, filename || "module.tsx", isTypescript);
-    };
-    const version = get_version3 ? get_version3() : "wasm";
-    globalThis.__hook_transpiler_version = version;
-    globalThis.__hook_transpile_jsx = transpileFn;
-    globalThis.__hook_wasm_self_test = run_self_test2;
-    console.log("[hook-transpiler] WASM transpiler ready:", version);
+    mod = await Promise.resolve().then(() => (init_relay_hook_transpiler(), relay_hook_transpiler_exports));
+    url = wasmUrl || new URL("../wasm/relay_hook_transpiler_bg.wasm", import.meta.url).href;
   } catch (e) {
-    console.warn("[hook-transpiler] Failed to initialize WASM transpiler (expected in Android)", e);
+    const absJs = "/hook-transpiler/dist/wasm/relay_hook_transpiler.js";
+    mod = await import(absJs);
+    url = wasmUrl || "/hook-transpiler/dist/wasm/relay_hook_transpiler_bg.wasm";
   }
+  const init = mod && mod.default;
+  if (typeof init !== "function")
+    throw new Error("Invalid WASM wrapper: expected default init function");
+  await init(url);
+  const transpile = mod.transpile_jsx;
+  if (typeof transpile !== "function")
+    throw new Error("WASM not exporting transpile_jsx");
+  globalThis.__hook_transpile_jsx = transpile;
+  const version = mod.get_version ? mod.get_version() : "unknown";
+  globalThis.__hook_transpiler_version = version;
 }
-async function initTranspiler() {
-  return initWasmTranspiler();
-}
+var initTranspiler = initHookTranspiler;
 
-// ../../dist/themedPrimitives.js
-var import_jsx_runtime6 = __toESM(require_jsx_runtime(), 1);
-
-// ../../dist/components/TSDiv.js
-var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
-var import_react6 = __toESM(require_react(), 1);
-init_unifiedBridge();
-init_styleManager();
-function useThemedStyles(tag2, className) {
-  (0, import_react6.useEffect)(() => {
-    try {
-      unifiedBridge_default.registerUsage(tag2, { className });
-      styleManager_default.requestRender();
-    } catch (e) {
-    }
-  }, [tag2, className]);
-  return { style: void 0 };
-}
-var ThemedElement = import_react6.default.forwardRef(({ component: Component, tag: tag2 = "div", className, style, children, ...rest }, ref) => {
-  useThemedStyles(tag2, className);
-  return (0, import_jsx_runtime5.jsx)(Component, { ref, className, style, ...rest, children });
-});
-var TSDiv = import_react6.default.forwardRef(({ component, tag: tag2 = "div", className, style, children, ...rest }, ref) => {
-  useThemedStyles(tag2, className);
-  const ResolvedComponent = component || tag2;
-  const voidElements = ["img", "input", "br", "hr", "area", "base", "col", "embed", "link", "meta", "param", "source", "track", "wbr"];
-  if (voidElements.includes(tag2)) {
-    return (0, import_jsx_runtime5.jsx)(ResolvedComponent, { ref, className, style, ...rest });
-  }
-  return (0, import_jsx_runtime5.jsx)(ResolvedComponent, { ref, className, style, ...rest, children });
-});
-
-// ../../dist/utils/themedStyled.js
-var import_react7 = __toESM(require_react(), 1);
-
-// ../../dist/utils/themedMapper.js
-init_unifiedBridge();
-
-// ../../dist/index.js
+// ../../dist/web/index.js
 init_themedStylerBridge();
 init_styleManager();
 init_unifiedBridge();
@@ -38564,23 +38094,16 @@ async function initWasmThemedStyler() {
     console.debug("[themed-styler] Already initialized");
     return;
   }
-  const isReactNative = typeof navigator !== "undefined" && navigator.product === "ReactNative";
+  const isAndroid/iOS Native = typeof navigator !== "undefined" && navigator.product === "Android/iOS Native";
   const isNode2 = typeof process !== "undefined" && process.versions && process.versions.node;
-  if (isReactNative || typeof window === "undefined" && !isNode2) {
+  if (isAndroid/iOS Native || typeof window === "undefined" && !isNode2) {
     console.debug("[themed-styler] Skipping WASM init in non-web/non-node environment");
     return;
   }
   try {
-    const { default: init, render_css_for_web: render_css_for_web2, get_rn_styles: get_rn_styles2, get_version: get_version3 } = await Promise.resolve().then(() => (init_themed_styler(), themed_styler_exports));
-    const wasmPath = new URL("/wasm/themed_styler_bg.wasm", window.location.origin).toString();
-    if (isNode2 && wasmPath.startsWith("file:")) {
-      const fs2 = await import("node:fs/promises");
-      const buffer = await fs2.readFile(new URL(wasmPath));
-      await init({ module_or_path: buffer });
-    } else {
-      await init({ module_or_path: wasmPath });
-    }
-    const version = get_version3 ? get_version3() : "wasm";
+    const { default: init, render_css_for_web, get_rn_styles, get_version: get_version2 } = await import("../wasm/themed_styler.js");
+    await init();
+    const version = get_version2 ? get_version2() : "wasm";
     console.log("[themed-styler] WASM initialized:", version);
     g2.__themedStylerRenderCss = (usage2, themes2) => {
       const state = {
@@ -38589,11 +38112,11 @@ async function initWasmThemedStyler() {
         used_classes: usage2.classes,
         used_tag_classes: usage2.tagClasses
       };
-      return render_css_for_web2(JSON.stringify(state));
+      return render_css_for_web(JSON.stringify(state));
     };
     g2.__themedStylerGetRn = (selector, classes, themes2) => {
       const state = { ...themes2 };
-      return JSON.parse(get_rn_styles2(JSON.stringify(state), selector, JSON.stringify(classes)));
+      return JSON.parse(get_rn_styles(JSON.stringify(state), selector, JSON.stringify(classes)));
     };
     g2.__themedStylerVersion = version;
   } catch (e) {
@@ -38605,7 +38128,7 @@ async function initThemedStyler() {
 }
 
 // public/test-app.js
-var import_jsx_runtime7 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime5 = __toESM(require_jsx_runtime(), 1);
 async function main() {
   const wasmEl = document.getElementById("wasm-state");
   try {
@@ -38621,18 +38144,27 @@ async function main() {
     const version = globalThis.__hook_transpiler_version || "unknown";
     const stylerVersion = globalThis.__themedStylerVersion || "unknown";
     console.log("Test App: WASMs ready - Transpiler:", version, "Styler:", stylerVersion);
+    const testCode = 'import { x as y } from "./test.js";\nconsole.log(y);';
+    console.log('TEST: Transpiling code with "as" keyword:');
+    console.log("INPUT:", testCode);
+    try {
+      const transpiled = await transpileCode(testCode, { filename: "test.jsx" }, false);
+      console.log("OUTPUT:", transpiled);
+    } catch (e) {
+      console.error("TRANSPILE ERROR:", e);
+    }
     wasmEl.textContent = `Ready (Transpiler: v${version}, Styler: v${stylerVersion})`;
     document.getElementById("styler-state").textContent = "Ready";
     styleManager_default.startAutoSync();
     console.log("Test App: Rendering component...");
-    console.log("React version:", import_react8.default.version);
-    if (!import_react8.default.useState) {
+    console.log("React version:", import_react6.default.version);
+    if (!import_react6.default.useState) {
       console.error("React.useState is MISSING!");
       throw new Error("React.useState is missing");
     }
     const container = document.getElementById("root");
     const root = (0, import_client.createRoot)(container);
-    console.log("Test App: HookRenderer type:", typeof HookRenderer);
+    console.log("Test App: HookRenderer type:", typeof HookRenderer_default);
     const props = {
       host: window.location.origin,
       hookPath: "/hooks/test-hook.jsx",
@@ -38649,8 +38181,13 @@ async function main() {
     };
     console.log("Test App: HookRenderer props:", props);
     root.render(
-      /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(import_react8.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(HookRenderer, { ...props }) })
+      /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(import_react6.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(HookRenderer_default, { ...props }) })
     );
+    const statusEl = document.createElement("div");
+    statusEl.id = "e2e-status";
+    statusEl.textContent = "static-imports-ok";
+    statusEl.style.display = "none";
+    document.body.appendChild(statusEl);
     console.log("Test App: Render called");
   } catch (err) {
     console.error("Test App Error:", err);
