@@ -6,8 +6,8 @@ declare module '*.wasm' {
 // Stub types for Android/iOS native components (not using React Native)
 // These files are placeholders and won't be used in web builds
 declare module 'android-native' {
-    export interface StyleProp<T> {}
-    export interface TurboModule {}
+    export interface StyleProp<T> { }
+    export interface TurboModule { }
     export const SafeAreaView: any
     export const ScrollView: any
     export const Text: any
@@ -19,7 +19,7 @@ declare module 'android-native' {
 }
 
 declare module 'ios-native' {
-    export interface StyleProp<T> {}
+    export interface StyleProp<T> { }
     export const SafeAreaView: any
     export const ScrollView: any
     export const Text: any

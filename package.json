@@ -1,6 +1,6 @@
 {
   "name": "@clevertree/themed-styler",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "Themed styler for Relay - Android/iOS Native with JSI support",
   "type": "module",
   "main": "./dist/web/index.js",

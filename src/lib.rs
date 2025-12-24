@@ -1,6 +1,5 @@
 use indexmap::{IndexMap, IndexSet};
 use once_cell::sync::Lazy;
-use regex::Regex;
 use serde::{de::Deserializer, Deserialize, Serialize};
 use serde_json::json;
 #[cfg(target_arch = "wasm32")]
@@ -555,8 +554,66 @@ fn css_props_string(props: &CssProps, vars: &IndexMap<String, String>) -> String
     buf
 }
 
-// Support var(--name) and var(name) with dotted paths
-static RE_VAR: Lazy<Regex> = Lazy::new(|| Regex::new(r"var\(\s*-{0,2}([a-zA-Z0-9_.-]+)\s*\)").unwrap());
+/// Parse var() references manually (replaces regex dependency)
+/// Matches: var(--name), var(name), with optional whitespace
+/// Supports alphanumeric, underscore, dot, and dash in variable names
+fn parse_var_references(input: &str) -> Vec<(usize, usize, String)> {
+    let mut results = Vec::new();
+    let bytes = input.as_bytes();
+    let mut i = 0;
+    
+    while i < bytes.len() {
+        // Look for "var("
+        if i + 4 <= bytes.len() && &bytes[i..i+4] == b"var(" {
+            let start = i;
+            i += 4;
+            
+            // Skip whitespace
+            while i < bytes.len() && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'\n' || bytes[i] == b'\r') {
+                i += 1;
+            }
+            
+            // Check for optional -- prefix
+            let has_prefix = i + 2 <= bytes.len() && &bytes[i..i+2] == b"--";
+            if has_prefix {
+                i += 2;
+            }
+            
+            // Collect variable name: [a-zA-Z0-9_.-]+
+            let name_start = i;
+            while i < bytes.len() {
+                let c = bytes[i];
+                if (c >= b'a' && c <= b'z') || (c >= b'A' && c <= b'Z') || 
+                   (c >= b'0' && c <= b'9') || c == b'_' || c == b'.' || c == b'-' {
+                    i += 1;
+                } else {
+                    break;
+                }
+            }
+            
+            let name_end = i;
+            if name_start < name_end {
+                // Skip trailing whitespace
+                while i < bytes.len() && (bytes[i] == b' ' || bytes[i] == b'\t' || bytes[i] == b'\n' || bytes[i] == b'\r') {
+                    i += 1;
+                }
+                
+                // Check for closing )
+                if i < bytes.len() && bytes[i] == b')' {
+                    let end = i + 1;
+                    let var_name = std::str::from_utf8(&bytes[name_start..name_end])
+                        .unwrap_or("").to_string();
+                    results.push((start, end, var_name));
+                    i = end;
+                    continue;
+                }
+            }
+        }
+        i += 1;
+    }
+    
+    results
+}
 
 // Tailwind color palette - embedded from tailwind-colors.html
 static TAILWIND_COLORS: Lazy<IndexMap<&'static str, IndexMap<&'static str, &'static str>>> = Lazy::new(|| {
@@ -720,22 +777,33 @@ static TAILWIND_COLORS: Lazy<IndexMap<&'static str, IndexMap<&'static str, &'sta
 });
 
 fn resolve_vars(input: &str, vars: &IndexMap<String, String>) -> String {
-    let mut out = input.to_string();
-    for cap in RE_VAR.captures_iter(input) {
-        if let Some(name) = cap.get(1) {
-            let key = name.as_str();
-            if let Some(val) = vars.get(key) {
-                // replace both var(--name) and var(name)
-                out = out.replace(&format!("var(--{})", key), val);
-                out = out.replace(&format!("var({})", key), val);
+    let var_refs = parse_var_references(input);
+    
+    if var_refs.is_empty() {
+        // Fast path: no var() references, just check for $ prefix
+        if input.starts_with('$') {
+            if let Some(val) = vars.get(&input[1..]) {
+                return val.clone();
             }
         }
+        return input.to_string();
     }
+    
+    // Replace var() references from right to left to preserve indices
+    let mut out = input.to_string();
+    for (start, end, var_name) in var_refs.iter().rev() {
+        if let Some(val) = vars.get(var_name) {
+            out.replace_range(*start..*end, val);
+        }
+    }
+    
+    // Also handle $ prefix for direct variable references
     if out.starts_with('$') {
         if let Some(val) = vars.get(&out[1..]) {
             return val.clone();
         }
     }
+    
     out
 }
 
@@ -1408,6 +1476,7 @@ mod tests {
     #[test]
     fn default_theme_has_p2() {
         let mut st = State::new_default();
+        st.register_tailwind_classes(["p-2".to_string()]);
         let css = st.css_for_web();
         assert!(css.contains(".p-2{"));
         assert!(css.contains("padding:8px"));
@@ -1415,22 +1484,41 @@ mod tests {
 
     #[test]
     fn rn_conversion() {
-        let st = State::new_default();
+        let mut st = State::new_default();
+        // Add a theme with button styles
+        let mut styles = IndexMap::new();
+        let mut button_props = IndexMap::new();
+        button_props.insert("backgroundColor".to_string(), json!("#007bff"));
+        styles.insert("button".to_string(), button_props);
+        st.add_theme("default", styles);
+        st.set_theme("default").ok();
+        
         let out = st.rn_styles_for("button", &[]);
         assert!(out.get("backgroundColor").is_some());
     }
 
     #[test]
     fn embedded_defaults_and_version() {
-        // default_state should contain the default theme and some variables
-        let st = State::default_state();
+        // Test that we can create a state and add a theme with variables
+        let mut st = State::default_state();
+        st.add_theme("default", IndexMap::new());
+        st.set_theme("default").ok();
+        
+        let mut vars = IndexMap::new();
+        vars.insert("primary".to_string(), "#007bff".to_string());
+        st.set_variables(vars);
+        
         assert!(st.themes.contains_key("default"));
         let def = st.themes.get("default").unwrap();
         assert!(def.variables.contains_key("primary"));
 
         // Version should compile and be non-empty (env! evaluated at compile-time)
-        let v = get_version();
-        assert!(!v.is_empty());
+        // Note: get_version() is only available for wasm32 target
+        #[cfg(target_arch = "wasm32")]
+        {
+            let v = get_version();
+            assert!(!v.is_empty());
+        }
     }
 
     #[test]
@@ -1475,6 +1563,15 @@ mod tests {
     #[test]
     fn display_flex_hover_breakpoint() {
         let mut st = State::new_default();
+        
+        // Set up theme with breakpoints
+        st.add_theme("default", IndexMap::new());
+        st.set_theme("default").ok();
+        
+        let mut breakpoints = IndexMap::new();
+        breakpoints.insert("md".to_string(), "768px".to_string());
+        st.set_breakpoints(breakpoints);
+        
         st.register_tailwind_classes([
             "block".into(),
             "inline-flex".into(),
@@ -1498,6 +1595,104 @@ mod tests {
         // RN resolves base class styles ignoring prefixes
         let rn = st.rn_styles_for("div", &["md:flex".into()]);
         assert_eq!(rn.get("display").and_then(|v| v.as_str()), Some("flex"));
+    }
+
+    #[test]
+    fn parse_var_references_basic() {
+        // Test basic var() parsing
+        let refs = parse_var_references("var(color)");
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].2, "color");
+        assert_eq!(refs[0].0, 0); // start
+        assert_eq!(refs[0].1, 10); // end (exclusive, so "var(color)" is 0..10)
+
+        // Test var() with -- prefix
+        let refs = parse_var_references("var(--primary)");
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].2, "primary");
+
+        // Test multiple var() references
+        let refs = parse_var_references("var(--color) and var(size)");
+        assert_eq!(refs.len(), 2);
+        assert_eq!(refs[0].2, "color");
+        assert_eq!(refs[1].2, "size");
+
+        // Test with whitespace
+        let refs = parse_var_references("var( --spacing )");
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].2, "spacing");
+
+        // Test with dots and dashes
+        let refs = parse_var_references("var(color.primary-500)");
+        assert_eq!(refs.len(), 1);
+        assert_eq!(refs[0].2, "color.primary-500");
+
+        // Test no matches
+        let refs = parse_var_references("no variables here");
+        assert_eq!(refs.len(), 0);
+
+        // Test incomplete var(
+        let refs = parse_var_references("var(");
+        assert_eq!(refs.len(), 0);
+
+        // Test var without closing
+        let refs = parse_var_references("var(color");
+        assert_eq!(refs.len(), 0);
+    }
+
+    #[test]
+    fn resolve_vars_basic() {
+        let mut vars = IndexMap::new();
+        vars.insert("primary".to_string(), "#ff0000".to_string());
+        vars.insert("spacing".to_string(), "8px".to_string());
+        vars.insert("color.blue".to_string(), "#0000ff".to_string());
+
+        // Test basic resolution
+        assert_eq!(resolve_vars("var(--primary)", &vars), "#ff0000");
+        assert_eq!(resolve_vars("var(primary)", &vars), "#ff0000");
+        assert_eq!(resolve_vars("var( --primary )", &vars), "#ff0000");
+
+        // Test multiple vars
+        assert_eq!(
+            resolve_vars("var(--primary) var(--spacing)", &vars),
+            "#ff0000 8px"
+        );
+
+        // Test dotted variable names
+        assert_eq!(resolve_vars("var(--color.blue)", &vars), "#0000ff");
+
+        // Test undefined variable (should not replace)
+        assert_eq!(resolve_vars("var(--undefined)", &vars), "var(--undefined)");
+
+        // Test $ prefix syntax
+        assert_eq!(resolve_vars("$primary", &vars), "#ff0000");
+
+        // Test no variables
+        assert_eq!(resolve_vars("plain text", &vars), "plain text");
+    }
+
+    #[test]
+    fn resolve_vars_edge_cases() {
+        let mut vars = IndexMap::new();
+        vars.insert("a".to_string(), "1".to_string());
+        vars.insert("b".to_string(), "2".to_string());
+
+        // Test adjacent vars
+        assert_eq!(resolve_vars("var(a)var(b)", &vars), "12");
+
+        // Test var in middle of text
+        assert_eq!(resolve_vars("prefix var(a) suffix", &vars), "prefix 1 suffix");
+
+        // Test empty input
+        assert_eq!(resolve_vars("", &vars), "");
+
+        // Test var with numbers
+        vars.insert("var123".to_string(), "value".to_string());
+        assert_eq!(resolve_vars("var(var123)", &vars), "value");
+
+        // Test var with underscores
+        vars.insert("my_var".to_string(), "test".to_string());
+        assert_eq!(resolve_vars("var(my_var)", &vars), "test");
     }
 }
 

@@ -795,7 +795,7 @@ var require_react_development = __commonJS({
             $$typeof: REACT_CONTEXT_TYPE,
             // As a workaround to support multiple concurrent renderers, we categorize
             // some renderers as primary and others as secondary. We only expect
-            // there to be two concurrent renderers at most: Android/iOS Native (primary) and
+            // there to be two concurrent renderers at most: React Native (primary) and
             // Fabric (secondary); React DOM (primary) and React ART (secondary).
             // Secondary renderers store their context values on separate fields.
             _currentValue: defaultValue,
@@ -32508,6 +32508,7 @@ var HookLoader = class {
   }
   constructor(options2) {
     this.moduleCache = /* @__PURE__ */ new Map();
+    this.pendingFetches = /* @__PURE__ */ new Map();
     this.host = options2.host;
     this.protocol = options2.protocol;
     this.moduleLoader = options2.moduleLoader;
@@ -32521,46 +32522,74 @@ var HookLoader = class {
       return {};
     return { ...builder() };
   }
+  normalizeToAbsolutePath(modulePath, fromPath) {
+    let normalized = modulePath;
+    try {
+      if (modulePath.startsWith("./") || modulePath.startsWith("../")) {
+        const baseDir = fromPath.substring(0, fromPath.lastIndexOf("/")) || "/hooks/client";
+        normalized = new URL(modulePath, `http://localhost${baseDir}/`).pathname;
+      } else if (!modulePath.startsWith("/")) {
+        normalized = `/hooks/client/${modulePath}`;
+      } else {
+        normalized = modulePath;
+      }
+    } catch (_) {
+      const baseDir = fromPath.substring(0, fromPath.lastIndexOf("/")) || "/hooks/client";
+      if (modulePath.startsWith("./")) {
+        normalized = `${baseDir}/${modulePath.slice(2)}`;
+      } else if (modulePath.startsWith("../")) {
+        const parts2 = modulePath.split("/");
+        let current = baseDir.split("/").filter(Boolean);
+        for (const part of parts2) {
+          if (part === "..")
+            current.pop();
+          else if (part !== ".")
+            current.push(part);
+        }
+        normalized = "/" + current.join("/");
+      } else if (!modulePath.startsWith("/")) {
+        normalized = `/hooks/client/${modulePath}`;
+      } else {
+        normalized = modulePath;
+      }
+    }
+    const parts = normalized.split("/").filter(Boolean);
+    const resolved = [];
+    for (const part of parts) {
+      if (part === "..")
+        resolved.pop();
+      else if (part !== ".")
+        resolved.push(part);
+    }
+    return "/" + resolved.join("/");
+  }
   async loadModule(modulePath, fromPath = "/hooks/client/get-client.jsx", context) {
     try {
       console.error("[HookLoader] loadModule called:", { modulePath, fromPath });
     } catch {
     }
-    let normalizedPath = modulePath;
-    try {
-      if (modulePath.startsWith("./") || modulePath.startsWith("../")) {
-        const base = fromPath && fromPath.startsWith("/") ? fromPath : "/hooks/client/get-client.jsx";
-        const baseUrl = new URL(base, "http://resolver.local");
-        const resolved = new URL(modulePath, baseUrl);
-        normalizedPath = resolved.pathname;
-      } else if (!modulePath.startsWith("/")) {
-        normalizedPath = `/hooks/client/${modulePath}`;
-      }
-      const parts = normalizedPath.split("/").filter(Boolean);
-      const normalized = [];
-      for (const part of parts) {
-        if (part === "..")
-          normalized.pop();
-        else if (part !== ".")
-          normalized.push(part);
-      }
-      normalizedPath = "/" + normalized.join("/");
-    } catch (_) {
-      const baseDir = (fromPath || "/hooks/client/get-client.jsx").split("/").slice(0, -1).join("/") || "/hooks/client";
-      const combined = `${baseDir}/${modulePath}`;
-      const parts = combined.split("/").filter(Boolean);
-      const normalized = [];
-      for (const part of parts) {
-        if (part === "..")
-          normalized.pop();
-        else if (part !== ".")
-          normalized.push(part);
-      }
-      normalizedPath = "/" + normalized.join("/");
-    }
+    const normalizedPath = this.normalizeToAbsolutePath(modulePath, fromPath);
     const cacheKey = `${this.host}:${normalizedPath}`;
-    if (this.moduleCache.has(cacheKey))
+    if (this.moduleCache.has(cacheKey)) {
+      console.error("[HookLoader] Module cache HIT:", cacheKey);
       return this.moduleCache.get(cacheKey);
+    }
+    if (this.pendingFetches.has(cacheKey)) {
+      console.error("[HookLoader] Pending fetch HIT (avoiding duplicate):", cacheKey);
+      return this.pendingFetches.get(cacheKey);
+    }
+    console.error("[HookLoader] Starting NEW fetch:", cacheKey);
+    const fetchPromise = this._doLoadModule(normalizedPath, context, cacheKey);
+    this.pendingFetches.set(cacheKey, fetchPromise);
+    try {
+      const result = await fetchPromise;
+      this.moduleCache.set(cacheKey, result);
+      return result;
+    } finally {
+      this.pendingFetches.delete(cacheKey);
+    }
+  }
+  async _doLoadModule(normalizedPath, context, cacheKey) {
     const requestHeaders = this.buildRequestHeaders(context);
     const fetchOptions = Object.keys(requestHeaders).length ? { headers: requestHeaders } : void 0;
     const buildAttempts = (pathIn) => {
@@ -32585,7 +32614,7 @@ var HookLoader = class {
       let code = null;
       let moduleUrl = null;
       const attempts = buildAttempts(normalizedPath);
-      console.error("[HookLoader.loadModule] Fetch attempts:", { modulePath, normalizedPath, attempts });
+      console.error("[HookLoader._doLoadModule] Fetch attempts:", { normalizedPath, attempts });
       for (const candidate of attempts) {
         const url = `${this.protocol}://${this.host}${candidate}`;
         console.error("[HookLoader] Loop iteration for candidate:", candidate, "total attempts:", attempts.length);
@@ -32620,9 +32649,6 @@ var HookLoader = class {
       let preprocessedCode = code;
       try {
         preprocessedCode = await resolveStaticImports(code, normalizedPath, context);
-        if (modulePath.includes("nested")) {
-          console.error("[HookLoader] TEST: nested module loaded and resolved, code length:", code.length);
-        }
       } catch (resolveErr) {
         console.warn("[RuntimeLoader] Static import resolution failed:", resolveErr);
       }
@@ -32664,10 +32690,9 @@ var HookLoader = class {
         this.onDiagnostics(diag);
         throw execErr;
       }
-      this.moduleCache.set(cacheKey, mod);
       return mod;
     } catch (err) {
-      console.error("[HookLoader.loadModule] Failed:", modulePath, err);
+      console.error("[HookLoader._doLoadModule] Failed:", normalizedPath, err);
       throw err;
     }
   }
@@ -32763,6 +32788,7 @@ var HookLoader = class {
   }
   clearCache() {
     this.moduleCache.clear();
+    this.pendingFetches.clear();
   }
 };
 
@@ -37871,6 +37897,9 @@ var HookRenderer = ({ host, hookPath, onElement, requestRender: requestRender2, 
       moduleLoader: webLoader,
       transpiler: (code, filename) => transpileCode(code, { filename })
     });
+    if (typeof window !== "undefined" && true) {
+      window.__currentLoader = loaderRef.current;
+    }
     if (startAutoSync2) {
       try {
         startAutoSync2();
@@ -38094,9 +38123,9 @@ async function initWasmThemedStyler() {
     console.debug("[themed-styler] Already initialized");
     return;
   }
-  const isAndroid/iOS Native = typeof navigator !== "undefined" && navigator.product === "Android/iOS Native";
+  const isNativeApp = typeof navigator !== "undefined" && (navigator.product === "AndroidNative" || navigator.product === "iOSNative");
   const isNode2 = typeof process !== "undefined" && process.versions && process.versions.node;
-  if (isAndroid/iOS Native || typeof window === "undefined" && !isNode2) {
+  if (isNativeApp || typeof window === "undefined" && !isNode2) {
     console.debug("[themed-styler] Skipping WASM init in non-web/non-node environment");
     return;
   }
