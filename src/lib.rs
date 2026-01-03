@@ -7,8 +7,52 @@ use wasm_bindgen::prelude::*;
 mod default_state;
 use default_state::bundled_state;
 
+// Default display density (1.0 = mdpi baseline)
+fn default_display_density() -> f32 { 1.0 }
+fn default_scaled_density() -> f32 { 1.0 }
+
 pub type CssProps = IndexMap<String, serde_json::Value>;
 pub type SelectorStyles = IndexMap<String, CssProps>; // selector -> props
+
+/// Convert dp to pixels using display density
+fn dp_to_px(dp: f32, density: f32) -> i32 {
+    (dp * density).round() as i32
+}
+
+/// Convert sp to pixels using scaled density  
+fn sp_to_px(sp: f32, scaled_density: f32) -> f32 {
+    sp * scaled_density
+}
+
+/// Parse a CSS value and convert to Android pixels if needed
+fn parse_and_convert_to_px(value: &serde_json::Value, density: f32) -> Option<serde_json::Value> {
+    match value {
+        serde_json::Value::Number(n) => {
+            // Bare number treated as dp
+            let dp = n.as_f64()? as f32;
+            Some(serde_json::json!(dp_to_px(dp, density)))
+        }
+        serde_json::Value::String(s) => {
+            // Parse string with units
+            let trimmed = s.trim();
+            if trimmed.ends_with("px") {
+                // Already in pixels
+                let px = trimmed.trim_end_matches("px").trim().parse::<f32>().ok()?;
+                Some(serde_json::json!(px as i32))
+            } else if trimmed.ends_with("dp") {
+                let dp = trimmed.trim_end_matches("dp").trim().parse::<f32>().ok()?;
+                Some(serde_json::json!(dp_to_px(dp, density)))
+            } else if let Ok(num) = trimmed.parse::<f32>() {
+                // Bare number as string, treat as dp
+                Some(serde_json::json!(dp_to_px(num, density)))
+            } else {
+                // Keep as-is (e.g., "wrap_content", "match_parent")
+                None
+            }
+        }
+        _ => None
+    }
+}
 
 fn deserialize_variables<'de, D>(deserializer: D) -> Result<IndexMap<String, String>, D::Error>
 where
@@ -83,6 +127,11 @@ pub struct State {
     pub themes: IndexMap<String, ThemeEntry>,
     pub default_theme: String,
     pub current_theme: String,
+    // Platform-specific metadata for unit conversions
+    #[serde(default = "default_display_density")]
+    pub display_density: f32, // Android displayMetrics.density (1.0 for mdpi, 2.0 for xhdpi, etc.)
+    #[serde(default = "default_scaled_density")]
+    pub scaled_density: f32,  // Android displayMetrics.scaledDensity for SP conversions
     // Legacy fields (kept for backward-compat JSON). Not used if themes[] carry variables/bps.
     #[serde(default)]
     pub theme_variables: IndexMap<String, IndexMap<String, String>>, // deprecated
@@ -267,7 +316,14 @@ impl State {
             merge_rn_props(&mut out, props, &vars);
         }
         for class in classes {
-            let (_bp, _hover, base) = parse_prefixed_class(class);
+            // Normalize input: strip leading dot if present (Android may pass ".bg-primary" as selector format)
+            let normalized_class = if class.starts_with('.') {
+                class[1..].to_string()
+            } else {
+                class.clone()
+            };
+            
+            let (_bp, _hover, base) = parse_prefixed_class(&normalized_class);
             // Prefer base selector match from theme
             let sel = class_to_selector(&base);
             if let Some(props) = eff.get(&sel) {
@@ -283,7 +339,168 @@ impl State {
                 merge_rn_props(&mut out, props, &vars);
             }
         }
+        
+        // CSS semantics: display: flex defaults to flex-direction: row
+        if let Some(display) = out.get("display") {
+                        eprintln!("[CSS Semantics] Found display={:?}, has flex-direction={}", display, out.contains_key("flex-direction"));
+            if display.as_str() == Some("flex") && !out.contains_key("flex-direction") {
+                                eprintln!("[CSS Semantics] Adding default flex-direction: row");
+                out.insert("flex-direction".to_string(), serde_json::json!("row"));
+            }
+        }
+        
         out
+    }
+
+    /// Android-specific style transformations
+    /// Converts CSS properties to Android-compatible values with platform-specific defaults
+    /// Handles unit conversions (dp/sp to px) using display density
+    pub fn android_styles_for(&self, selector: &str, classes: &[String]) -> IndexMap<String, serde_json::Value> {
+        let mut styles = self.rn_styles_for(selector, classes);
+        let density = self.display_density;
+        let scaled_density = self.scaled_density;
+        
+        // Convert all dimension properties to pixels
+        let dimension_props = [
+            "width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight",
+            "padding", "paddingTop", "paddingBottom", "paddingLeft", "paddingRight",
+            "paddingHorizontal", "paddingVertical",
+            "margin", "marginTop", "marginBottom", "marginLeft", "marginRight",
+            "marginHorizontal", "marginVertical",
+            "borderRadius", "borderWidth", "borderTopWidth", "borderBottomWidth",
+            "borderLeftWidth", "borderRightWidth",
+            "gap", "rowGap", "columnGap", "elevation"
+        ];
+        
+        for prop in &dimension_props {
+            if let Some(value) = styles.get(*prop).cloned() {
+                if let Some(converted) = parse_and_convert_to_px(&value, density) {
+                    styles.insert(prop.to_string(), converted);
+                }
+            }
+        }
+        
+        // Convert font sizes (use scaled density for accessibility)
+        if let Some(font_size) = styles.get("fontSize").cloned() {
+            if let Some(serde_json::Value::Number(n)) = parse_and_convert_to_px(&font_size, density).as_ref() {
+                // For text, use scaled density for accessibility
+                let sp_value = n.as_f64().unwrap_or(14.0) as f32 / density * scaled_density;
+                styles.insert("fontSize".to_string(), serde_json::json!(sp_value));
+            }
+        }
+        
+        // Android Layout Defaults
+        if selector == "div" || selector == "view" {
+            if styles.get("flex-direction").map_or(false, |v| v.as_str() == Some("row")) {
+                if !styles.contains_key("width") {
+                    styles.insert("width".to_string(), serde_json::json!("match_parent"));
+                }
+            } else if !styles.contains_key("width") {
+                styles.insert("width".to_string(), serde_json::json!("match_parent"));
+            }
+            if selector == "div" && !styles.contains_key("height") {
+                styles.insert("height".to_string(), serde_json::json!("wrap_content"));
+            }
+        }
+        
+        // Text elements default to wrap_content
+        if selector == "span" || selector == "text" {
+            if !styles.contains_key("width") {
+                styles.insert("width".to_string(), serde_json::json!("wrap_content"));
+            }
+            if !styles.contains_key("height") {
+                styles.insert("height".to_string(), serde_json::json!("wrap_content"));
+            }
+        }
+        
+        // Convert flexWrap to Android-friendly format
+        if let Some(flex_wrap) = styles.get("flex-wrap") {
+            if flex_wrap.as_str() == Some("wrap") {
+                styles.insert("androidFlexWrap".to_string(), serde_json::json!(true));
+            }
+        }
+        
+        // Convert alignItems to Android gravity equivalents
+        if let Some(align_items) = styles.get("align-items") {
+            let gravity = match align_items.as_str() {
+                Some("center") => "center_vertical",
+                Some("flex-start") | Some("start") => "top",
+                Some("flex-end") | Some("end") => "bottom",
+                _ => ""
+            };
+            if !gravity.is_empty() {
+                styles.insert("androidGravity".to_string(), serde_json::json!(gravity));
+            }
+        }
+        
+        // Convert justifyContent to Android layout gravity
+        if let Some(justify) = styles.get("justify-content") {
+            let layout_gravity = match justify.as_str() {
+                Some("center") => "center_horizontal",
+                Some("flex-start") | Some("start") => "start",
+                Some("flex-end") | Some("end") => "end",
+                Some("space-between") => "space_between",
+                Some("space-around") => "space_around",
+                _ => ""
+            };
+            if !layout_gravity.is_empty() {
+                styles.insert("androidLayoutGravity".to_string(), serde_json::json!(layout_gravity));
+            }
+        }
+        
+        // Convert overflow-x/overflow-y to Android scrolling hints
+        if let Some(overflow_x) = styles.get("overflowX") {
+            if overflow_x.as_str() == Some("auto") || overflow_x.as_str() == Some("scroll") {
+                styles.insert("androidScrollHorizontal".to_string(), serde_json::json!(true));
+            }
+        }
+        if let Some(overflow_y) = styles.get("overflowY") {
+            if overflow_y.as_str() == Some("auto") || overflow_y.as_str() == Some("scroll") {
+                styles.insert("androidScrollVertical".to_string(), serde_json::json!(true));
+            }
+        }
+        
+        // Convert textAlign to Android gravity
+        if let Some(text_align) = styles.get("textAlign") {
+            let gravity = match text_align.as_str() {
+                Some("center") => "center_horizontal",
+                Some("right") | Some("end") => "end",
+                Some("left") | Some("start") => "start",
+                _ => ""
+            };
+            if !gravity.is_empty() {
+                styles.insert("androidTextGravity".to_string(), serde_json::json!(gravity));
+            }
+        }
+        
+        // Convert fontWeight to Android typeface style
+        if let Some(font_weight) = styles.get("fontWeight") {
+            let is_bold = match font_weight {
+                serde_json::Value::String(s) => s.contains("bold"),
+                serde_json::Value::Number(n) => {
+                    let weight = n.as_i64().unwrap_or(400);
+                    weight >= 500
+                }
+                _ => false
+            };
+            styles.insert("androidFontBold".to_string(), serde_json::json!(is_bold));
+        }
+        
+        // Convert boxShadow to elevation
+        if let Some(box_shadow) = styles.get("boxShadow") {
+            if let Some(shadow_str) = box_shadow.as_str() {
+                if !shadow_str.is_empty() {
+                    let elevation_dp = if shadow_str.contains("20px") { 24.0 }
+                    else if shadow_str.contains("15px") { 16.0 }
+                    else if shadow_str.contains("10px") { 8.0 }
+                    else if shadow_str.contains("5px") { 4.0 }
+                    else { 4.0 };
+                    styles.insert("elevation".to_string(), serde_json::json!(dp_to_px(elevation_dp, density)));
+                }
+            }
+        }
+        
+        styles
     }
 
     // Previously supported loading YAML at runtime; now defaults are embedded.
@@ -876,6 +1093,9 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
         "flex" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); return Some(p); }
         "flex-row" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-direction".into(), json!("row")); return Some(p); }
         "flex-col" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-direction".into(), json!("column")); return Some(p); }
+        "flex-wrap" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-wrap".into(), json!("wrap")); return Some(p); }
+        "flex-nowrap" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-wrap".into(), json!("nowrap")); return Some(p); }
+        "flex-wrap-reverse" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-wrap".into(), json!("wrap-reverse")); return Some(p); }
         "flex-1" => { let mut p = CssProps::new(); p.insert("flex".into(), json!(1)); return Some(p); }
         _ => {}
     }
@@ -1034,7 +1254,7 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
     }
     // text-{color}-{shade}
     if let Some(rest) = class.strip_prefix("text-") {
-        if let Some(hex) = get_tailwind_color(rest) {
+        if let Some(hex) = get_tailwind_color_with_vars(rest, vars) {
             let mut props = CssProps::new();
             props.insert("color".into(), json!(hex));
             return Some(props);
@@ -1042,7 +1262,7 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
     }
     // bg-{color}-{shade}
     if let Some(rest) = class.strip_prefix("bg-") {
-        if let Some(hex) = get_tailwind_color(rest) {
+        if let Some(hex) = get_tailwind_color_with_vars(rest, vars) {
             let mut props = CssProps::new();
             props.insert("background-color".into(), json!(hex));
             return Some(props);
@@ -1050,7 +1270,7 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
     }
     // divide-{color}-{shade} (sets border-color for child dividers)
     if let Some(rest) = class.strip_prefix("divide-") {
-        if let Some(hex) = get_tailwind_color(rest) {
+        if let Some(hex) = get_tailwind_color_with_vars(rest, vars) {
             let mut props = CssProps::new();
             props.insert("border-color".into(), json!(hex));
             return Some(props);
@@ -1081,7 +1301,7 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
         if color_or_width_parts.len() == 2 {
             // Could be color-shade like "blue-500"
             let color_shade = color_or_width_parts.join("-");
-            if let Some(hex) = get_tailwind_color(&color_shade) {
+            if let Some(hex) = get_tailwind_color_with_vars(&color_shade, vars) {
                 let mut props = CssProps::new();
                 let prop_name = if let Some(s) = side {
                     format!("border-{}-color", s)
@@ -1096,7 +1316,7 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
         // Check for simple color without shade (single word color like "black", "white")
         if color_or_width_parts.len() == 1 {
             let potential_color = format!("{}-500", color_or_width_parts[0]);
-            if let Some(hex) = get_tailwind_color(&potential_color) {
+            if let Some(hex) = get_tailwind_color_with_vars(&potential_color, vars) {
                 let mut props = CssProps::new();
                 let prop_name = if let Some(s) = side {
                     format!("border-{}-color", s)
@@ -1424,10 +1644,63 @@ fn get_tailwind_color(color_shade: &str) -> Option<String> {
     let color_name = parts[0];
     let shade = parts[1];
     
-    TAILWIND_COLORS
+    // First try standard Tailwind colors
+    if let Some(hex) = TAILWIND_COLORS
         .get(color_name)
         .and_then(|shades| shades.get(shade))
-        .map(|&hex| hex.to_string())
+    {
+        return Some(hex.to_string());
+    }
+    
+    None
+}
+
+fn get_tailwind_color_with_vars(color_shade: &str, vars: &IndexMap<String, String>) -> Option<String> {
+    // First try standard Tailwind colors
+    if let Some(hex) = get_tailwind_color(color_shade) {
+        return Some(hex);
+    }
+    
+    // If not found, check if color_shade matches a variable
+    // Theme variables are flattened with "." separators, e.g., "colors.primary"
+    // So we need to check:
+    // 1. Direct match: "primary" → look for "primary" in vars
+    // 2. Color namespace: "primary" → look for "colors.primary" in vars (plural)
+    // 3. Color namespace: "primary" → look for "color.primary" in vars (singular)
+    // 4. With shade: "primary-500" → look for "colors.primary" or "colors.primary-500" in vars
+    
+    if let Some(val) = vars.get(color_shade) {
+        return Some(val.clone());
+    }
+    
+    // Try with "colors." namespace prefix (plural - HookRenderer uses this)
+    if let Some(val) = vars.get(&format!("colors.{}", color_shade)) {
+        return Some(val.clone());
+    }
+    
+    // Try with "color." namespace prefix (singular - fallback)
+    if let Some(val) = vars.get(&format!("color.{}", color_shade)) {
+        return Some(val.clone());
+    }
+    
+    // Handle cases where the color name doesn't have a shade but we need to look for a variable
+    // e.g., "primary" (from bg-primary) → look for "color.primary"
+    let parts: Vec<&str> = color_shade.split('-').collect();
+    if parts.len() >= 1 {
+        let color_name = parts[0];
+        
+        // Try direct variable
+        if let Some(val) = vars.get(color_name) {
+            return Some(val.clone());
+        }
+        
+        // Try with "color." namespace
+        if let Some(val) = vars.get(&format!("color.{}", color_name)) {
+            return Some(val.clone());
+        }
+    }
+    
+    None
 }
 
 /// Parse arbitrary values like bg-[var(--primary)], text-[#ff0000], border-[hsl(200,50%,50%)]

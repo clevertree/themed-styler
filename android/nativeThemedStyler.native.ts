@@ -18,7 +18,7 @@ const baseThemesPayload = { themes: {}, currentTheme: null }
 
 export async function initNativeThemedStyler(): Promise<void> {
     const g: any = typeof globalThis !== 'undefined' ? (globalThis as any) : {}
-    if (g.__themedStylerRenderCss && g.__themedStylerGetRn) {
+    if (g.__themedStylerRenderCss && g.__themedStylerGetAndroidStyles) {
         return
     }
     if (!themedStylerModule) {
@@ -45,14 +45,14 @@ export async function initNativeThemedStyler(): Promise<void> {
         }
     }
 
-    g.__themedStylerGetRn = (selector: string, classes: string[], themesState: ThemesState) => {
+    g.__themedStylerGetAndroidStyles = (selector: string, classes: string[], themesState: ThemesState) => {
         try {
             const classesJson = safeStringify(classes ?? [])
             const themesJson = safeStringify(themesState ?? baseThemesPayload)
-            const raw = themedStylerModule.getRnStyles(selector, classesJson, themesJson)
+            const raw = themedStylerModule.getAndroidStyles(selector, classesJson, themesJson)
             return raw ? JSON.parse(raw) : {}
         } catch (err) {
-            console.warn('[nativeThemedStyler] getRnStyles failed', err)
+            console.warn('[nativeThemedStyler] getAndroidStyles failed', err)
             return {}
         }
     }

@@ -25,7 +25,7 @@ const unifiedBridge = {
   getThemes: themedStylerBridge.getThemes,
   getThemeList: themedStylerBridge.getThemeList,
   getCssForWeb: themedStylerBridge.getCssForWeb,
-  getRnStyles: themedStylerBridge.getRnStyles,
+  getAndroidStyles: themedStylerBridge.getAndroidStyles,
 
   // Theme YAML helpers
   loadThemesFromYamlUrl,

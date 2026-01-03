@@ -52,38 +52,6 @@ pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeRenderCss(
 }
 
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_relay_client_ThemedStylerModule_nativeGetRnStyles(
-  env: JNIEnv,
-  class: JClass,
-  selector: JString,
-  classes_json: JString,
-  themes_json: JString,
-) -> jstring {
-  Java_com_relay_pure_ThemedStylerModule_nativeGetRnStyles(env, class, selector, classes_json, themes_json)
-}
-
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeGetRnStyles(
-  mut env: JNIEnv,
-  _class: JClass,
-  selector: JString,
-  classes_json: JString,
-  themes_json: JString,
-) -> jstring {
-  let selector_str = jstring_to_string(&mut env, selector).unwrap_or_else(|| String::new());
-  let classes = jstring_to_string(&mut env, classes_json).unwrap_or_else(|| "[]".to_string());
-  let themes = jstring_to_string(&mut env, themes_json).unwrap_or_else(|| "{}".to_string());
-  let classes_vec: Vec<String> = serde_json::from_str(&classes).unwrap_or_default();
-  let themes_input = bridge_common::parse_themes_json(&themes);
-  let state = bridge_common::build_state(UsageSnapshot::default(), themes_input);
-  let styles = state.rn_styles_for(&selector_str, &classes_vec);
-  match serde_json::to_string(&styles) {
-    Ok(json) => new_jstring(&mut env, &json),
-    Err(_) => new_jstring(&mut env, "{}"),
-  }
-}
-
-#[unsafe(no_mangle)]
 pub extern "system" fn Java_com_relay_client_ThemedStylerModule_nativeGetAndroidStyles(
   env: JNIEnv,
   class: JClass,
@@ -105,33 +73,42 @@ pub extern "system" fn Java_com_relay_pure_ThemedStylerModule_nativeGetAndroidSt
   let selector_str = jstring_to_string(&mut env, selector).unwrap_or_else(|| String::new());
   let classes = jstring_to_string(&mut env, classes_json).unwrap_or_else(|| "[]".to_string());
   let themes = jstring_to_string(&mut env, themes_json).unwrap_or_else(|| "{}".to_string());
+  
   let classes_vec: Vec<String> = serde_json::from_str(&classes).unwrap_or_default();
   let themes_input = bridge_common::parse_themes_json(&themes);
-  let state = bridge_common::build_state(UsageSnapshot::default(), themes_input);
-  let mut styles = state.rn_styles_for(&selector_str, &classes_vec);
-
-  // Android-specific layout enhancements
-  if selector_str == "div" || selector_str == "view" {
-    if styles.get("flexDirection").map_or(false, |v| v.as_str() == Some("row")) {
-      styles.insert("width".to_string(), serde_json::json!("match_parent"));
-    } else if !styles.contains_key("width") {
-      styles.insert("width".to_string(), serde_json::json!("match_parent"));
+  
+  // DEBUG: Check if themes were parsed
+  let themes_count = themes_input.themes.len();
+  let current_theme_str = themes_input.current_theme.clone().unwrap_or_else(|| "none".to_string());
+  
+  let mut state = bridge_common::build_state(UsageSnapshot::default(), themes_input);
+  
+  // Extract display density from themes if provided
+  if let Ok(themes_obj) = serde_json::from_str::<serde_json::Value>(&themes) {
+    if let Some(density) = themes_obj.get("displayDensity").and_then(|v| v.as_f64()) {
+      state.display_density = density as f32;
     }
-    if selector_str == "div" && !styles.contains_key("height") {
-      styles.insert("height".to_string(), serde_json::json!("wrap_content"));
-    }
-  }
-  if selector_str == "span" || selector_str == "text" {
-    if !styles.contains_key("width") {
-      styles.insert("width".to_string(), serde_json::json!("wrap_content"));
-    }
-    if !styles.contains_key("height") {
-      styles.insert("height".to_string(), serde_json::json!("wrap_content"));
+    if let Some(scaled) = themes_obj.get("scaledDensity").and_then(|v| v.as_f64()) {
+      state.scaled_density = scaled as f32;
     }
   }
+  
+  // Use Android-specific style transformation
+  let styles = state.android_styles_for(&selector_str, &classes_vec);
+  
+  // Include debug info in result if nav-btn
+  let debug_info = if selector_str.contains("button") && classes_vec.iter().any(|c| c.contains("nav-btn")) {
+    format!(";DEBUG:parsed_themes={},current_theme={},state_themes={},style_props={}", 
+      themes_count, current_theme_str, state.themes.len(), styles.len())
+  } else {
+    String::new()
+  };
 
   match serde_json::to_string(&styles) {
-    Ok(json) => new_jstring(&mut env, &json),
+    Ok(json) => {
+      let result = if debug_info.is_empty() { json } else { format!("{}\"_debug\":\"{}\"}}", &json[..json.len()-1], debug_info) };
+      new_jstring(&mut env, &result)
+    },
     Err(_) => new_jstring(&mut env, "{}"),
   }
 }

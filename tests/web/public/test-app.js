@@ -60,7 +60,7 @@ async function main() {
       host: window.location.origin,
       hookPath: "/hooks/test-hook.jsx",
       onElement: (tag, props) => {
-        console.log('registerUsage:', tag);
+        // console.log('registerUsage:', tag);
         unifiedBridge.registerUsage(tag, props);
       },
       requestRender: () => styleManager.requestRender(),

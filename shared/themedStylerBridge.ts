@@ -188,15 +188,15 @@ export function getCssForWeb(): string {
   return `/* themed-styler fallback (no renderer):\nclasses=${JSON.stringify(snap.classes)}\ntags=${JSON.stringify(snap.tags)}\ntagClasses=${JSON.stringify(snap.tagClasses)}\n*/`
 }
 
-// RN accessor: REQUIRES native hook to be loaded; throws if unavailable.
-export function getRnStyles(selector: string, classes: string[] = []) {
+// Android accessor: REQUIRES native hook to be loaded; throws if unavailable.
+export function getAndroidStyles(selector: string, classes: string[] = []) {
   const g: any = typeof globalThis !== 'undefined' ? (globalThis as any) : {}
-  if (typeof g.__themedStylerGetRn !== 'function') {
-    throw new Error('[themedStylerBridge.getRnStyles] Native hook __themedStylerGetRn not available. Ensure initThemedStyler() completed successfully.')
+  if (typeof g.__themedStylerGetAndroidStyles !== 'function') {
+    throw new Error('[themedStylerBridge.getAndroidStyles] Native hook __themedStylerGetAndroidStyles not available. Ensure initThemedStyler() completed successfully.')
   }
   const themesState = getThemes()
-  try { return g.__themedStylerGetRn(selector, classes, themesState) } catch (e) {
-    throw new Error(`[themedStylerBridge.getRnStyles] Failed to compute styles: ${e}`)
+  try { return g.__themedStylerGetAndroidStyles(selector, classes, themesState) } catch (e) {
+    throw new Error(`[themedStylerBridge.getAndroidStyles] Failed to compute styles: ${e}`)
   }
 }
 
@@ -209,7 +209,7 @@ export default {
   getThemes,
   getThemeList,
   getCssForWeb,
-  getRnStyles,
+  getAndroidStyles,
   loadThemesFromYamlText,
   loadThemesFromYamlUrl,
 }

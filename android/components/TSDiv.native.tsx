@@ -18,7 +18,7 @@ export function useThemedStyles(tag: string, className?: string) {
         }
     }, [tag, className])
 
-    const style = classes.length ? (unifiedBridge.getRnStyles(tag, classes) as StyleProp<any>) : undefined
+    const style = classes.length ? (unifiedBridge.getAndroidStyles(tag, classes) as StyleProp<any>) : undefined
     return { style }
 }
 
@@ -49,7 +49,7 @@ export function resolveThemedStyle(tag: string, className?: string) {
     } catch (e) {
         // ignore
     }
-    return classes.length ? (unifiedBridge.getRnStyles(tag, classes) as StyleProp<any>) : undefined
+    return classes.length ? (unifiedBridge.getAndroidStyles(tag, classes) as StyleProp<any>) : undefined
 }
 
 const overflowClassRegex = /\boverflow(?:-[xy])?-[a-z0-9-]+\b/i

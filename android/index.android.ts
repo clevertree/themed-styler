@@ -6,7 +6,7 @@
 declare global {
     var __themedStylerNative: any
     var __themedStylerRenderCss: ((usage: any, themes: any) => string) | undefined
-    var __themedStylerGetRn: ((themeName: string) => any) | undefined
+    var __themedStylerGetAndroidStyles: ((selector: string, classes: string[], themes: any) => any) | undefined
     var __themedStylerGetVersion: (() => string) | undefined
 }
 
@@ -21,12 +21,12 @@ declare global {
  */
 export async function initAndroidThemedStyler(opts?: {
     onRenderCss?: (usage: any, themes: any) => string
-    onGetRnStyles?: (themeName: string) => any
+    onGetAndroidStyles?: (selector: string, classes: string[], themes: any) => any
 }): Promise<void> {
     const g = globalThis as any
 
     // Check if already initialized
-    if (g.__themedStylerRenderCss && g.__themedStylerGetRn) {
+    if (g.__themedStylerRenderCss && g.__themedStylerGetAndroidStyles) {
         console.debug('[themed-styler-android] Already initialized')
         return
     }
@@ -36,7 +36,7 @@ export async function initAndroidThemedStyler(opts?: {
         console.warn('[themed-styler-android] Native binding not available - using stubs')
         // Provide stub implementations that fall back gracefully
         g.__themedStylerRenderCss = opts?.onRenderCss || ((usage: any, themes: any) => '')
-        g.__themedStylerGetRn = opts?.onGetRnStyles || ((themeName: string) => ({}))
+        g.__themedStylerGetAndroidStyles = opts?.onGetAndroidStyles || ((selector: string, classes: string[], themes: any) => ({}))
         g.__themedStylerGetVersion = () => 'native-stub'
         return
     }
@@ -53,14 +53,14 @@ export async function initAndroidThemedStyler(opts?: {
         }
     }
 
-    g.__themedStylerGetRn = (themeName: string) => {
+    g.__themedStylerGetAndroidStyles = (selector: string, classes: string[], themesState: any) => {
         try {
             // Call native Rust function via JNI
-            const result = g.__themedStylerNative.getRnStyles(themeName)
+            const result = g.__themedStylerNative.getAndroidStyles(selector, JSON.stringify(classes), JSON.stringify(themesState))
             return JSON.parse(result || '{}')
         } catch (e) {
-            console.error('[themed-styler-android] getRnStyles failed:', e)
-            return opts?.onGetRnStyles ? opts.onGetRnStyles(themeName) : {}
+            console.error('[themed-styler-android] getAndroidStyles failed:', e)
+            return opts?.onGetAndroidStyles ? opts.onGetAndroidStyles(selector, classes, themesState) : {}
         }
     }
 
@@ -95,11 +95,12 @@ export function createAndroidTheme(definitions: Record<string, any>) {
  */
 export function applyAndroidThemeStyle(
     baseProps: any,
-    themeName: string,
+    selector: string,
+    classes: string[],
     fallbackStyle?: any,
 ): any {
     const g = globalThis as any
-    const themeStyles = g?.__themedStylerGetRn?.(themeName) || {}
+    const themeStyles = g?.__themedStylerGetAndroidStyles?.(selector, classes, g.getThemes?.()) || {}
 
     return {
         ...baseProps,

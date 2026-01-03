@@ -193,7 +193,7 @@ Use platform-specific entry points to avoid bundling unnecessary code:
 // Web
 import { initThemedStyler, TSDiv } from '@clevertree/themed-styler';
 
-// Android/Android/iOS Native
+// Android/iOS Native
 import { initThemedStyler, TSDiv } from '@clevertree/themed-styler/android';
 ```
 
@@ -244,8 +244,6 @@ npm run test:e2e
 ## Requirements
 
 - **Node.js**: >= 18 (required for ESM and tooling)
-- **React**: >= 18.0.0
-- **Android/iOS Native**: >= 0.70 (for Android/iOS platforms)
 
 ## Troubleshooting
 

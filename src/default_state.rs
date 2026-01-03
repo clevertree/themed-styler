@@ -7,6 +7,8 @@ pub fn bundled_state() -> State {
         themes: IndexMap::new(),
         default_theme: String::new(),
         current_theme: String::new(),
+            display_density: 1.0,
+            scaled_density: 1.0,
         theme_variables: IndexMap::new(),
         variables: IndexMap::new(),
         breakpoints: IndexMap::new(),

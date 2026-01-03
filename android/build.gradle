@@ -1,0 +1,73 @@
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+android {
+    namespace = "com.relay.client"
+    compileSdk = 33
+
+    defaultConfig {
+        minSdk = 24
+        targetSdk = 33
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+        }
+    }
+
+    packagingOptions {
+        pickFirst "**/libjsc.so"
+        pickFirst "**/libc++_shared.so"
+    }
+
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['jniLibs']
+        }
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.clevertree:jscbridge:1.0.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'org.yaml:snakeyaml:2.2'
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+
+                groupId = 'com.clevertree'
+                artifactId = 'themed-styler-android'
+                version = '1.0.0'
+
+                pom {
+                    name = 'Themed Styler for Android'
+                    description = 'Native styling engine for Android'
+                    url = 'https://github.com/clevertree/themed-styler'
+
+                    licenses {
+                        license {
+                            name = 'MIT OR Apache-2.0'
+                        }
+                    }
+                }
+            }
+        }
+        repositories {
+            mavenLocal()
+        }
+    }
+}

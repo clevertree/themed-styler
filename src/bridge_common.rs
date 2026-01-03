@@ -14,7 +14,7 @@ pub struct UsageSnapshot {
 pub struct ThemesInput {
   #[serde(default)]
   pub themes: IndexMap<String, ThemeEntry>,
-  #[serde(rename = "currentTheme", default)]
+  #[serde(default)]
   pub current_theme: Option<String>,
 }
 
@@ -45,5 +45,12 @@ pub fn parse_usage_json(json: &str) -> UsageSnapshot {
 }
 
 pub fn parse_themes_json(json: &str) -> ThemesInput {
-  serde_json::from_str(json).unwrap_or_default()
+  match serde_json::from_str(json) {
+    Ok(input) => input,
+    Err(e) => {
+      eprintln!("[parse_themes_json] Deserialization error: {}", e);
+      eprintln!("[parse_themes_json] JSON sample (first 300 chars): {}", &json.chars().take(300).collect::<String>());
+      ThemesInput::default()
+    }
+  }
 }

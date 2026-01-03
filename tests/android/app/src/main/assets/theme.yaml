@@ -7,6 +7,9 @@ themes:
         text: "#1f2937"
         background: "#ffffff"
     selectors:
+      body:
+        flex: 1
+        backgroundColor: "var(--colors-background)"
       div:
         padding: 16
         backgroundColor: "var(--colors-background)"
@@ -30,3 +33,21 @@ themes:
         borderRadius: 8
       ".shadow-lg":
         elevation: 4
+
+  light:
+    inherits: default
+    variables:
+      colors:
+        primary: "#3b82f6"
+        secondary: "#10b981"
+        text: "#1f2937"
+        background: "#ffffff"
+
+  dark:
+    inherits: default
+    variables:
+      colors:
+        primary: "#60a5fa"
+        secondary: "#a78bfa"
+        text: "#f9fafb"
+        background: "#111827"

@@ -1,5 +1,11 @@
 themes:
   default:
+    breakpoints:
+      sm: 640
+      md: 768
+      lg: 1024
+      xl: 1280
+      "2xl": 1536
     selectors:
       body:
         background-color: "#0f172a"
@@ -19,6 +25,43 @@ themes:
       ".flex-col":
         display: "flex"
         flex-direction: "column"
+      ".flex-row":
+        display: "flex"
+        flex-direction: "row"
+      ".flex-wrap":
+        flex-wrap: "wrap"
+      ".items-center":
+        align-items: "center"
+      ".items-start":
+        align-items: "flex-start"
+      ".items-end":
+        align-items: "flex-end"
+      ".justify-center":
+        justify-content: "center"
+      ".justify-between":
+        justify-content: "space-between"
+      ".justify-start":
+        justify-content: "flex-start"
+      ".justify-end":
+        justify-content: "flex-end"
+      ".gap-1":
+        gap: "4px"
+      ".gap-2":
+        gap: "8px"
+      ".gap-3":
+        gap: "12px"
+      ".gap-4":
+        gap: "16px"
+      ".gap-6":
+        gap: "24px"
+      ".gap-8":
+        gap: "32px"
+      ".overflow-hidden":
+        overflow: "hidden"
+      ".overflow-x-auto":
+        overflow-x: "auto"
+      ".overflow-y-auto":
+        overflow-y: "auto"
       ".w-screen":
         width: "100vw"
       ".h-screen":
