@@ -132,15 +132,7 @@ pub struct State {
     pub display_density: f32, // Android displayMetrics.density (1.0 for mdpi, 2.0 for xhdpi, etc.)
     #[serde(default = "default_scaled_density")]
     pub scaled_density: f32,  // Android displayMetrics.scaledDensity for SP conversions
-    // Legacy fields (kept for backward-compat JSON). Not used if themes[] carry variables/bps.
-    #[serde(default)]
-    pub theme_variables: IndexMap<String, IndexMap<String, String>>, // deprecated
-    #[serde(default, deserialize_with = "deserialize_variables")]
-    pub variables: IndexMap<String, String>, // deprecated global
-    #[serde(default, deserialize_with = "deserialize_variables")]
-    pub breakpoints: IndexMap<String, String>, // deprecated global
-    #[serde(default)]
-    pub used_selectors: IndexSet<String>, // deprecated: exact selector strings (kept for back-compat)
+    
     #[serde(default)]
     pub used_classes: IndexSet<String>,   // observed classes on elements
     #[serde(default)]
@@ -266,10 +258,8 @@ impl State {
         self.default_theme = name.into();
     }
 
-    pub fn register_selectors<I: IntoIterator<Item = String>>(&mut self, selectors: I) {
-        for s in selectors {
-            self.used_selectors.insert(s);
-        }
+    pub fn register_selectors<I: IntoIterator<Item = String>>(&mut self, _selectors: I) {
+        // Deprecated: selectors are now part of the theme entry
     }
 
     pub fn register_tailwind_classes<I: IntoIterator<Item = String>>(&mut self, classes: I) {
@@ -291,7 +281,6 @@ impl State {
 
 
     pub fn clear_usage(&mut self) {
-        self.used_selectors.clear();
         self.used_classes.clear();
         self.used_tags.clear();
         self.used_tag_classes.clear();
@@ -302,11 +291,8 @@ impl State {
             "themes": self.themes,
             "default_theme": self.default_theme,
             "current_theme": self.current_theme,
-            // legacy fields are still serialized for back-compat but may be empty
-            "theme_variables": self.theme_variables,
-            "variables": self.variables,
-            "breakpoints": self.breakpoints,
-            "used_selectors": self.used_selectors,
+            "display_density": self.display_density,
+            "scaled_density": self.scaled_density,
             "used_classes": self.used_classes,
             "used_tags": self.used_tags,
             "used_tag_classes": self.used_tag_classes,
@@ -783,8 +769,6 @@ impl State {
     fn effective_theme_all(&self) -> (SelectorStyles, IndexMap<String, String>) {
         let mut selectors: SelectorStyles = SelectorStyles::new();
         let mut vars: IndexMap<String, String> = IndexMap::new();
-        // Start with deprecated globals as the lowest base
-        for (k, v) in self.variables.iter() { vars.insert(k.clone(), v.clone()); }
         // Merge default -> parents -> child so child wins on conflicts
         let chain = self.theme_chain();
         for name in chain.into_iter().rev() {
@@ -816,8 +800,6 @@ impl State {
     // Effective breakpoints with inheritance; child overrides parent/default.
     pub fn effective_breakpoints(&self) -> IndexMap<String, String> {
         let mut bps: IndexMap<String, String> = IndexMap::new();
-        // Start with deprecated globals
-        for (k, v) in self.breakpoints.iter() { bps.insert(k.clone(), v.clone()); }
         let chain = self.theme_chain();
         for name in chain.into_iter().rev() {
             if let Some(entry) = self.themes.get(&name) {

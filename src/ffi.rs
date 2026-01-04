@@ -10,26 +10,19 @@ pub extern "C" fn themed_styler_version() -> *const c_char {
 
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn themed_styler_render_css(
-    usage_json: *const c_char,
     themes_json: *const c_char,
 ) -> *mut c_char {
-    if usage_json.is_null() || themes_json.is_null() {
+    if themes_json.is_null() {
         return ptr::null_mut();
     }
-
-    let usage_str = match unsafe { CStr::from_ptr(usage_json).to_str() } {
-        Ok(s) => s,
-        Err(_) => return ptr::null_mut(),
-    };
 
     let themes_str = match unsafe { CStr::from_ptr(themes_json).to_str() } {
         Ok(s) => s,
         Err(_) => return ptr::null_mut(),
     };
 
-    let snapshot = bridge_common::parse_usage_json(usage_str);
     let themes_input = bridge_common::parse_themes_json(themes_str);
-    let state = bridge_common::build_state(snapshot, themes_input);
+    let state = bridge_common::build_state(themes_input);
     let css = state.css_for_web();
     
     match CString::new(css) {

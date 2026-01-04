@@ -213,32 +213,13 @@ object AndroidRenderer {
     }
 
     private fun applyThemedStyles(view: View, type: String, className: String) {
-        val classes = className.split(" ").filter { it.isNotEmpty() }
-        // Convert class names to selector format by adding dot prefix
-        val classSelectors = classes.map { ".${it}" }
-        val classesJson = gson.toJson(classSelectors)
-        val themesJson = JSCManager.activeManager?.getThemesJson() ?: "{}"
-
-        var currentTheme = "unknown"
-        try {
-            val map = gson.fromJson(themesJson, Map::class.java) as? Map<String, Any>
-            currentTheme = map?.get("current_theme")?.toString() ?: "unknown"
-        } catch (_: Exception) {
-            // Ignore parse errors; fall back to unknown
-        }
-
-        Log.d(TAG, "[ThemedStyles] type=$type classes=$classes -> selectors=$classSelectors")
-        Log.d(TAG, "[ThemedStyles] themesJson=${themesJson.take(500)}")
+        Log.d(TAG, "[ThemedStyles] type=$type classes=$className")
 
         try {
-            val stylesJson = ThemedStylerModule.nativeGetAndroidStyles(type, classesJson, themesJson)
-            Log.d(TAG, "[ThemedStyles] nativeGetAndroidStyles called with: type=$type, selectors=$classSelectors")
-            Log.d(TAG, "[ThemedStyles] nativeGetAndroidStyles returned: $stylesJson")
-            if (stylesJson.isNotBlank() && stylesJson != "{}") {
-                val styleType = object : TypeToken<Map<String, Any>>() {}.type
-                val styles: Map<String, Any> = gson.fromJson(stylesJson, styleType)
+            val styles = ThemedStylerModule.getStyles(type, className)
+            if (styles != null && styles.isNotEmpty()) {
                 // Quick visibility into what was applied (helps confirm theme palette)
-                Log.i(TAG, "[StyleApply] theme=$currentTheme type=$type selectors=$classSelectors styles=$styles")
+                Log.i(TAG, "[StyleApply] type=$type classes=$className styles=$styles")
                 Log.d(TAG, "[ThemedStyles] Applying styled: $styles")
                 applyStyleMap(view, styles)
                 return

@@ -76,6 +76,10 @@ class JSCManager(context: Context) : BaseJSCManager(context) {
                   "default_theme": "default"
                 }
             """.trimIndent()
+
+            val metrics = context.resources.displayMetrics
+            ThemedStylerModule.setTheme(themesJson, metrics.density, metrics.scaledDensity)
+            Log.i(TAG, "Native themed-styler initialized with density=${metrics.density}")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load themes", e)
         }

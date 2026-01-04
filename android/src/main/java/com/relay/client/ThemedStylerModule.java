@@ -12,21 +12,20 @@ public class ThemedStylerModule {
     private static final Gson gson = new Gson();
     private static final StyleCache styleCache = new StyleCache(gson);
 
-    public static native String nativeRenderCss(String usageJson, String themesJson);
+    public static native void nativeInitialize(String themesJson, float displayDensity, float scaledDensity);
 
-    public static native String nativeGetAndroidStyles(String selector, String classesJson, String themesJson);
+    public static native String nativeGetAndroidStyles(String selector, String className);
 
-    public static native String nativeProcessStyles(String stylesJson, String themesJson);
-
-    public static native String nativeGetDefaultState();
+    public static native String nativeProcessStyles(String stylesJson);
 
     public static native String nativeGetVersion();
 
     /**
      * Set the current theme for the cached styler
      */
-    public static void setTheme(String themeJson) {
-        styleCache.setTheme(themeJson);
+    public static void setTheme(String themeJson, float density, float scaledDensity) {
+        nativeInitialize(themeJson, density, scaledDensity);
+        styleCache.clear();
     }
 
     /**
@@ -40,10 +39,7 @@ public class ThemedStylerModule {
      * Process inline styles (expand shorthands, convert units)
      */
     public static Map<String, Object> processStyles(Map<String, Object> styles) {
-        android.util.Log.d("ThemedStylerModule", "[processStyles] input: " + styles);
-        Map<String, Object> result = styleCache.processStyles(styles);
-        android.util.Log.d("ThemedStylerModule", "[processStyles] output: " + result);
-        return result;
+        return styleCache.processStyles(styles);
     }
 
     /**

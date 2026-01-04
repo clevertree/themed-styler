@@ -16,29 +16,8 @@ public class StyleCache {
     // Computed style cache: key = selector|className, value = style properties map
     private final ConcurrentHashMap<String, Map<String, Object>> styleCache = new ConcurrentHashMap<>();
 
-    // Current theme JSON
-    private String currentThemeJson = "{}";
-    private String currentThemeName = "unknown";
-
     public StyleCache(Gson gson) {
         this.gson = gson;
-    }
-
-    /**
-     * Set the theme and invalidate cache
-     */
-    public void setTheme(String themeJson) {
-        Log.d(TAG, "[Cache] Theme changed, invalidating cache");
-        this.currentThemeJson = themeJson;
-        styleCache.clear();
-
-        try {
-            Map<String, Object> obj = gson.fromJson(themeJson, Map.class);
-            Object currentTheme = obj.get("current_theme");
-            currentThemeName = currentTheme != null ? currentTheme.toString() : "unknown";
-        } catch (Exception e) {
-            Log.w(TAG, "[Cache] Failed to parse theme name: " + e.getMessage());
-        }
     }
 
     /**
@@ -65,23 +44,7 @@ public class StyleCache {
      */
     private Map<String, Object> computeStyleForElement(String selector, String className) {
         try {
-            String[] classesList = className.split("\\s+");
-            StringBuilder classesJsonBuilder = new StringBuilder("[");
-            boolean first = true;
-            for (String cls : classesList) {
-                if (cls.isEmpty())
-                    continue;
-                if (!first)
-                    classesJsonBuilder.append(",");
-                classesJsonBuilder.append("\".")
-                        .append(cls)
-                        .append("\"");
-                first = false;
-            }
-            classesJsonBuilder.append("]");
-            String classesJson = classesJsonBuilder.toString();
-
-            String stylesJson = ThemedStylerModule.nativeGetAndroidStyles(selector, classesJson, currentThemeJson);
+            String stylesJson = ThemedStylerModule.nativeGetAndroidStyles(selector, className);
             Log.d(TAG, "[Compute] Result for " + selector + "." + className + ": " + stylesJson);
 
             if (stylesJson != null && !stylesJson.isEmpty() && !stylesJson.equals("{}")) {
@@ -101,8 +64,8 @@ public class StyleCache {
     public Map<String, Object> processStyles(Map<String, Object> styles) {
         try {
             String stylesJson = gson.toJson(styles);
-            String processedJson = ThemedStylerModule.nativeProcessStyles(stylesJson, currentThemeJson);
-            
+            String processedJson = ThemedStylerModule.nativeProcessStyles(stylesJson);
+
             if (processedJson != null && !processedJson.isEmpty() && !processedJson.equals("{}")) {
                 return gson.fromJson(processedJson, Map.class);
             } else {

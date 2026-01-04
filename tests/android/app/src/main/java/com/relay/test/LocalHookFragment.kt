@@ -99,7 +99,7 @@ class LocalHookFragment : Fragment() {
     
     private fun updateRendererButtons(btnAct: Button, btnReact: Button) {
         btnAct.isEnabled = rendererMode != com.clevertree.hooktranspiler.model.RendererMode.ACT
-        btnReact.isEnabled = rendererMode != com.clevertree.hooktranspiler.model.RendererMode.REACT_NATIVE
+        btnReact.isEnabled = rendererMode != com.clevertree.hooktranspiler.model.RendererMode.ANDROID
     }
 
     private fun loadLocalHook() {
