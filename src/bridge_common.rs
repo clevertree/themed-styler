@@ -32,6 +32,9 @@ pub fn build_state(usage: UsageSnapshot, themes_input: ThemesInput) -> State {
         state.default_theme = name.clone();
       }
     }
+    eprintln!("[build_state] themes: {:?}", state.themes.keys().collect::<Vec<_>>());
+    eprintln!("[build_state] current_theme: {:?}", state.current_theme);
+    eprintln!("[build_state] default_theme: {:?}", state.default_theme);
   }
   state.register_selectors(usage.selectors);
   for class in usage.classes {

@@ -36,9 +36,9 @@ fn parse_and_convert_to_px(value: &serde_json::Value, density: f32) -> Option<se
             // Parse string with units
             let trimmed = s.trim();
             if trimmed.ends_with("px") {
-                // Already in pixels
+                // Treat px as density-independent pixels (dp) for cross-platform parity
                 let px = trimmed.trim_end_matches("px").trim().parse::<f32>().ok()?;
-                Some(serde_json::json!(px as i32))
+                Some(serde_json::json!(dp_to_px(px, density)))
             } else if trimmed.ends_with("dp") {
                 let dp = trimmed.trim_end_matches("dp").trim().parse::<f32>().ok()?;
                 Some(serde_json::json!(dp_to_px(dp, density)))
@@ -117,7 +117,7 @@ pub struct ThemeEntry {
     pub selectors: SelectorStyles,
     #[serde(default, deserialize_with = "deserialize_variables")]
     pub variables: IndexMap<String, String>,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_variables")]
     pub breakpoints: IndexMap<String, String>,
 }
 
@@ -135,9 +135,9 @@ pub struct State {
     // Legacy fields (kept for backward-compat JSON). Not used if themes[] carry variables/bps.
     #[serde(default)]
     pub theme_variables: IndexMap<String, IndexMap<String, String>>, // deprecated
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_variables")]
     pub variables: IndexMap<String, String>, // deprecated global
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_variables")]
     pub breakpoints: IndexMap<String, String>, // deprecated global
     #[serde(default)]
     pub used_selectors: IndexSet<String>, // deprecated: exact selector strings (kept for back-compat)
@@ -196,6 +196,70 @@ impl State {
         let cur = self.current_theme.clone();
         let entry = self.themes.entry(cur).or_default();
         entry.breakpoints = map;
+    }
+
+    pub fn process_styles(&self, mut styles: IndexMap<String, serde_json::Value>) -> IndexMap<String, serde_json::Value> {
+        let density = self.display_density;
+        
+        // Expand shorthands
+        // Order matters: Horizontal/Vertical should be expanded before general shorthands
+        // so that specific ones win if they were already present.
+        if let Some(ph) = styles.get("paddingHorizontal").cloned() {
+            styles.entry("paddingLeft".into()).or_insert(ph.clone());
+            styles.entry("paddingRight".into()).or_insert(ph.clone());
+        }
+        if let Some(pv) = styles.get("paddingVertical").cloned() {
+            styles.entry("paddingTop".into()).or_insert(pv.clone());
+            styles.entry("paddingBottom".into()).or_insert(pv.clone());
+        }
+        if let Some(p) = styles.get("padding").cloned() {
+            styles.entry("paddingTop".into()).or_insert(p.clone());
+            styles.entry("paddingBottom".into()).or_insert(p.clone());
+            styles.entry("paddingLeft".into()).or_insert(p.clone());
+            styles.entry("paddingRight".into()).or_insert(p.clone());
+        }
+        if let Some(mh) = styles.get("marginHorizontal").cloned() {
+            styles.entry("marginLeft".into()).or_insert(mh.clone());
+            styles.entry("marginRight".into()).or_insert(mh.clone());
+        }
+        if let Some(mv) = styles.get("marginVertical").cloned() {
+            styles.entry("marginTop".into()).or_insert(mv.clone());
+            styles.entry("marginBottom".into()).or_insert(mv.clone());
+        }
+        if let Some(m) = styles.get("margin").cloned() {
+            styles.entry("marginTop".into()).or_insert(m.clone());
+            styles.entry("marginBottom".into()).or_insert(m.clone());
+            styles.entry("marginLeft".into()).or_insert(m.clone());
+            styles.entry("marginRight".into()).or_insert(m.clone());
+        }
+        if let Some(r) = styles.get("borderRadius").cloned() {
+            styles.entry("borderTopLeftRadius".into()).or_insert(r.clone());
+            styles.entry("borderTopRightRadius".into()).or_insert(r.clone());
+            styles.entry("borderBottomLeftRadius".into()).or_insert(r.clone());
+            styles.entry("borderBottomRightRadius".into()).or_insert(r.clone());
+        }
+
+        // Convert only dimension properties to pixels
+        let dimension_props = [
+            "width", "height", "minWidth", "minHeight", "maxWidth", "maxHeight",
+            "padding", "paddingTop", "paddingBottom", "paddingLeft", "paddingRight",
+            "paddingHorizontal", "paddingVertical",
+            "margin", "marginTop", "marginBottom", "marginLeft", "marginRight",
+            "marginHorizontal", "marginVertical",
+            "borderRadius", "borderTopLeftRadius", "borderTopRightRadius", "borderBottomLeftRadius", "borderBottomRightRadius",
+            "borderWidth", "borderTopWidth", "borderBottomWidth", "borderLeftWidth", "borderRightWidth",
+            "gap", "rowGap", "columnGap", "elevation", "fontSize", "lineHeight", "letterSpacing"
+        ];
+        
+        for prop in &dimension_props {
+            if let Some(value) = styles.get(*prop).cloned() {
+                if let Some(converted) = parse_and_convert_to_px(&value, density) {
+                    styles.insert(prop.to_string(), converted);
+                }
+            }
+        }
+        
+        styles
     }
 
     pub fn set_default_theme(&mut self, name: impl Into<String>) {
@@ -309,12 +373,91 @@ impl State {
         post_process_css(&rules, &vars)
     }
 
-    pub fn rn_styles_for(&self, selector: &str, classes: &[String]) -> IndexMap<String, serde_json::Value> {
+    pub fn android_base_styles(&self, selector: &str, classes: &[String]) -> IndexMap<String, serde_json::Value> {
         let (eff, vars) = self.effective_theme_all();
         let mut out: IndexMap<String, serde_json::Value> = IndexMap::new();
-        if let Some(props) = eff.get(selector) {
-            merge_rn_props(&mut out, props, &vars);
+
+        // Pre-insert androidOrientation to ensure it's early in the map for gap processing
+        out.insert("androidOrientation".to_string(), serde_json::json!("vertical"));
+
+        // 1. Apply hardcoded platform defaults (lowest priority)
+        let mut defaults = CssProps::new();
+        match selector.to_lowercase().as_str() {
+            "div" => {
+                defaults.insert("width".into(), json!("match_parent"));
+            }
+            "p" => {
+                defaults.insert("width".into(), json!("match_parent"));
+                defaults.insert("margin-vertical".into(), json!("16px"));
+            }
+            "h1" => {
+                defaults.insert("width".into(), json!("match_parent"));
+                defaults.insert("font-size".into(), json!("32px"));
+                defaults.insert("font-weight".into(), json!("bold"));
+                defaults.insert("margin-vertical".into(), json!("21.44px"));
+            }
+            "h2" => {
+                defaults.insert("width".into(), json!("match_parent"));
+                defaults.insert("font-size".into(), json!("24px"));
+                defaults.insert("font-weight".into(), json!("bold"));
+                defaults.insert("margin-vertical".into(), json!("19.92px"));
+            }
+            "h3" => {
+                defaults.insert("width".into(), json!("match_parent"));
+                defaults.insert("font-size".into(), json!("18.72px"));
+                defaults.insert("font-weight".into(), json!("bold"));
+                defaults.insert("margin-vertical".into(), json!("18.72px"));
+            }
+            "h4" => {
+                defaults.insert("width".into(), json!("match_parent"));
+                defaults.insert("font-size".into(), json!("16px"));
+                defaults.insert("font-weight".into(), json!("bold"));
+                defaults.insert("margin-vertical".into(), json!("21.28px"));
+            }
+            "h5" => {
+                defaults.insert("width".into(), json!("match_parent"));
+                defaults.insert("font-size".into(), json!("13.28px"));
+                defaults.insert("font-weight".into(), json!("bold"));
+                defaults.insert("margin-vertical".into(), json!("22.17px"));
+            }
+            "h6" => {
+                defaults.insert("width".into(), json!("match_parent"));
+                defaults.insert("font-size".into(), json!("10.72px"));
+                defaults.insert("font-weight".into(), json!("bold"));
+                defaults.insert("margin-vertical".into(), json!("24.96px"));
+            }
+            "input" => {
+                defaults.insert("padding-vertical".into(), json!("8px"));
+                defaults.insert("padding-horizontal".into(), json!("12px"));
+                defaults.insert("border-radius".into(), json!("4px"));
+                defaults.insert("border-width".into(), json!("1px"));
+                defaults.insert("border-color".into(), json!("#cccccc"));
+                defaults.insert("background-color".into(), json!("#ffffff"));
+                defaults.insert("min-height".into(), json!("40px"));
+                defaults.insert("android-gravity".into(), json!("center_vertical"));
+            }
+            "button" => {
+                defaults.insert("padding-vertical".into(), json!("8px"));
+                defaults.insert("padding-horizontal".into(), json!("16px"));
+                defaults.insert("border-radius".into(), json!("4px"));
+                defaults.insert("background-color".into(), json!("#2196F3"));
+                defaults.insert("color".into(), json!("#ffffff"));
+                defaults.insert("android-gravity".into(), json!("center"));
+            }
+            _ => {}
         }
+        merge_android_props(&mut out, &defaults, &vars);
+
+        if selector == "button" || classes.iter().any(|c| c.contains("bg-")) {
+            log::debug!("[android_base_styles] selector={} classes={:?}", selector, classes);
+        }
+
+        // 2. Apply theme selector styles (overwrites defaults)
+        if let Some(props) = eff.get(selector) {
+            merge_android_props(&mut out, props, &vars);
+        }
+
+        // 3. Apply class styles (overwrites selector)
         for class in classes {
             // Normalize input: strip leading dot if present (Android may pass ".bg-primary" as selector format)
             let normalized_class = if class.starts_with('.') {
@@ -327,28 +470,50 @@ impl State {
             // Prefer base selector match from theme
             let sel = class_to_selector(&base);
             if let Some(props) = eff.get(&sel) {
-                merge_rn_props(&mut out, props, &vars);
+                merge_android_props(&mut out, props, &vars);
                 continue;
             }
             // Dynamic mapping for base class
             if let Some(dynamic_props) = dynamic_css_properties_for_class(&base, &vars) {
-                merge_rn_props(&mut out, &dynamic_props, &vars);
+                merge_android_props(&mut out, &dynamic_props, &vars);
                 continue;
             }
             if let Some(props) = eff.get(&base) {
-                merge_rn_props(&mut out, props, &vars);
+                merge_android_props(&mut out, props, &vars);
             }
         }
         
-        // CSS semantics: display: flex defaults to flex-direction: row
+        // CSS semantics: display: flex defaults to flexDirection: row
         if let Some(display) = out.get("display") {
-                        eprintln!("[CSS Semantics] Found display={:?}, has flex-direction={}", display, out.contains_key("flex-direction"));
-            if display.as_str() == Some("flex") && !out.contains_key("flex-direction") {
-                                eprintln!("[CSS Semantics] Adding default flex-direction: row");
-                out.insert("flex-direction".to_string(), serde_json::json!("row"));
+            if display.as_str() == Some("flex") && !out.contains_key("flexDirection") {
+                out.insert("flexDirection".to_string(), serde_json::json!("row"));
+                out.insert("androidOrientation".to_string(), serde_json::json!("horizontal"));
+            }
+        }
+
+        // Fallback for block elements to be column if not specified
+        if !out.contains_key("flexDirection") {
+            match selector.to_lowercase().as_str() {
+                "div" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "p" => {
+                    out.insert("flexDirection".to_string(), serde_json::json!("column"));
+                    out.insert("androidOrientation".to_string(), serde_json::json!("vertical"));
+                }
+                _ => {}
             }
         }
         
+        // Ensure androidOrientation is in sync with flexDirection if it was set but orientation wasn't
+        if let Some(fd) = out.get("flexDirection").and_then(|v| v.as_str()) {
+            if !out.contains_key("androidOrientation") {
+                let orientation = if fd == "column" || fd == "column-reverse" {
+                    "vertical"
+                } else {
+                    "horizontal"
+                };
+                out.insert("androidOrientation".to_string(), serde_json::json!(orientation));
+            }
+        }
+
         out
     }
 
@@ -356,9 +521,16 @@ impl State {
     /// Converts CSS properties to Android-compatible values with platform-specific defaults
     /// Handles unit conversions (dp/sp to px) using display density
     pub fn android_styles_for(&self, selector: &str, classes: &[String]) -> IndexMap<String, serde_json::Value> {
-        let mut styles = self.rn_styles_for(selector, classes);
+        let mut styles = self.android_base_styles(selector, classes);
+        
         let density = self.display_density;
         let scaled_density = self.scaled_density;
+
+        // Convert flexDirection to Android orientation EARLY so layout-dependent props (like gap) can use it
+        if let Some(flex_dir) = styles.get("flexDirection") {
+            let orientation = if flex_dir.as_str() == Some("row") { "horizontal" } else { "vertical" };
+            styles.shift_insert(0, "androidOrientation".to_string(), serde_json::json!(orientation));
+        }
         
         // Convert all dimension properties to pixels
         let dimension_props = [
@@ -369,7 +541,7 @@ impl State {
             "marginHorizontal", "marginVertical",
             "borderRadius", "borderWidth", "borderTopWidth", "borderBottomWidth",
             "borderLeftWidth", "borderRightWidth",
-            "gap", "rowGap", "columnGap", "elevation"
+            "gap", "rowGap", "columnGap", "elevation", "lineHeight", "letterSpacing"
         ];
         
         for prop in &dimension_props {
@@ -389,65 +561,95 @@ impl State {
             }
         }
         
-        // Android Layout Defaults
-        if selector == "div" || selector == "view" {
-            if styles.get("flex-direction").map_or(false, |v| v.as_str() == Some("row")) {
-                if !styles.contains_key("width") {
-                    styles.insert("width".to_string(), serde_json::json!("match_parent"));
-                }
-            } else if !styles.contains_key("width") {
-                styles.insert("width".to_string(), serde_json::json!("match_parent"));
-            }
-            if selector == "div" && !styles.contains_key("height") {
-                styles.insert("height".to_string(), serde_json::json!("wrap_content"));
-            }
-        }
-        
-        // Text elements default to wrap_content
-        if selector == "span" || selector == "text" {
-            if !styles.contains_key("width") {
-                styles.insert("width".to_string(), serde_json::json!("wrap_content"));
-            }
-            if !styles.contains_key("height") {
-                styles.insert("height".to_string(), serde_json::json!("wrap_content"));
-            }
-        }
-        
         // Convert flexWrap to Android-friendly format
-        if let Some(flex_wrap) = styles.get("flex-wrap") {
+        if let Some(flex_wrap) = styles.get("flexWrap") {
             if flex_wrap.as_str() == Some("wrap") {
                 styles.insert("androidFlexWrap".to_string(), serde_json::json!(true));
             }
         }
-        
-        // Convert alignItems to Android gravity equivalents
-        if let Some(align_items) = styles.get("align-items") {
-            let gravity = match align_items.as_str() {
-                Some("center") => "center_vertical",
-                Some("flex-start") | Some("start") => "top",
-                Some("flex-end") | Some("end") => "bottom",
+
+        // Map opacity to androidAlpha
+        if let Some(opacity) = styles.get("opacity").cloned() {
+            styles.insert("androidAlpha".to_string(), opacity);
+        }
+
+        let is_horizontal = styles.get("androidOrientation").and_then(|v| v.as_str()) == Some("horizontal");
+        let mut gravity_parts = Vec::new();
+
+        // Convert alignItems (cross-axis) to Android gravity equivalents
+        if let Some(align_items) = styles.get("alignItems") {
+            let part = match align_items.as_str() {
+                Some("center") => if is_horizontal { "center_vertical" } else { "center_horizontal" },
+                Some("flex-start") | Some("start") => if is_horizontal { "top" } else { "start" },
+                Some("flex-end") | Some("end") => if is_horizontal { "bottom" } else { "end" },
+                Some("stretch") => if is_horizontal { "fill_vertical" } else { "fill_horizontal" },
                 _ => ""
             };
-            if !gravity.is_empty() {
-                styles.insert("androidGravity".to_string(), serde_json::json!(gravity));
+            if !part.is_empty() {
+                gravity_parts.push(part);
             }
         }
         
-        // Convert justifyContent to Android layout gravity
-        if let Some(justify) = styles.get("justify-content") {
+        // Convert justifyContent (main-axis) to Android gravity equivalents
+        if let Some(justify) = styles.get("justifyContent") {
+            let part = match justify.as_str() {
+                Some("center") => if is_horizontal { "center_horizontal" } else { "center_vertical" },
+                Some("flex-start") | Some("start") => if is_horizontal { "start" } else { "top" },
+                Some("flex-end") | Some("end") => if is_horizontal { "end" } else { "bottom" },
+                _ => ""
+            };
+            if !part.is_empty() {
+                gravity_parts.push(part);
+            }
+
+            // Also keep layout gravity for compatibility or non-LinearLayout parents
             let layout_gravity = match justify.as_str() {
                 Some("center") => "center_horizontal",
                 Some("flex-start") | Some("start") => "start",
                 Some("flex-end") | Some("end") => "end",
-                Some("space-between") => "space_between",
-                Some("space-around") => "space_around",
+                Some("space-between") | Some("between") => "space_between",
+                Some("space-around") | Some("around") => "space_around",
                 _ => ""
             };
             if !layout_gravity.is_empty() {
                 styles.insert("androidLayoutGravity".to_string(), serde_json::json!(layout_gravity));
             }
         }
-        
+
+        if !gravity_parts.is_empty() {
+            let gravity = if gravity_parts.contains(&"center_vertical") && gravity_parts.contains(&"center_horizontal") {
+                "center".to_string()
+            } else {
+                gravity_parts.join("|")
+            };
+            styles.insert("androidGravity".to_string(), serde_json::json!(gravity));
+        }
+
+        // Handle border shorthand: "1px solid #color"
+        if let Some(serde_json::Value::String(border)) = styles.get("border").cloned() {
+            let parts: Vec<&str> = border.split_whitespace().collect();
+            for part in parts {
+                if part.ends_with("px") {
+                    if let Ok(w) = part.trim_end_matches("px").parse::<f32>() {
+                        styles.insert("borderWidth".to_string(), serde_json::json!(dp_to_px(w, density)));
+                    }
+                } else if part.starts_with('#') {
+                    styles.insert("borderColor".to_string(), serde_json::json!(part));
+                }
+            }
+        }
+
+        // Map boxShadow to elevation
+        if let Some(serde_json::Value::String(shadow)) = styles.get("boxShadow").cloned() {
+            if !shadow.is_empty() {
+                let elevation = if shadow.contains("20px") { 24 }
+                               else if shadow.contains("15px") { 16 }
+                               else if shadow.contains("10px") { 8 }
+                               else { 4 };
+                styles.insert("elevation".to_string(), serde_json::json!(dp_to_px(elevation as f32, density)));
+            }
+        }
+
         // Convert overflow-x/overflow-y to Android scrolling hints
         if let Some(overflow_x) = styles.get("overflowX") {
             if overflow_x.as_str() == Some("auto") || overflow_x.as_str() == Some("scroll") {
@@ -472,18 +674,60 @@ impl State {
                 styles.insert("androidTextGravity".to_string(), serde_json::json!(gravity));
             }
         }
+
+        // Convert objectFit to Android scaleType
+        if let Some(object_fit) = styles.get("objectFit") {
+            let scale_type = match object_fit.as_str() {
+                Some("cover") => "center_crop",
+                Some("contain") => "fit_center",
+                Some("fill") => "fit_xy",
+                Some("none") => "center",
+                Some("scale-down") => "center_inside",
+                _ => ""
+            };
+            if !scale_type.is_empty() {
+                styles.insert("androidScaleType".to_string(), serde_json::json!(scale_type));
+            }
+        }
+
+        // Handle full width/height
+        if let Some(h) = styles.get("height").cloned() {
+            if h.as_str() == Some("100%") {
+                styles.insert("height".to_string(), serde_json::json!("match_parent"));
+            }
+        }
+        if let Some(w) = styles.get("width").cloned() {
+            if w.as_str() == Some("100%") {
+                styles.insert("width".to_string(), serde_json::json!("match_parent"));
+            }
+        }
+
+        // Handle flex/weight: if flex is present, set the dimension in the orientation direction to 0
+        // Note: We don't set it to 0 here anymore because we don't know if the parent is a LinearLayout.
+        // The NativeRenderer will handle setting it to 0 if it's inside a LinearLayout.
+        if styles.contains_key("flex") || styles.contains_key("flexGrow") {
+            // Just ensure we have some dimension if not specified
+            if !styles.contains_key("width") {
+                styles.insert("width".to_string(), serde_json::json!("wrap_content"));
+            }
+            if !styles.contains_key("height") {
+                styles.insert("height".to_string(), serde_json::json!("wrap_content"));
+            }
+        }
         
         // Convert fontWeight to Android typeface style
         if let Some(font_weight) = styles.get("fontWeight") {
             let is_bold = match font_weight {
-                serde_json::Value::String(s) => s.contains("bold"),
+                serde_json::Value::String(s) => s.contains("bold") || s == "600" || s == "700" || s == "500",
                 serde_json::Value::Number(n) => {
                     let weight = n.as_i64().unwrap_or(400);
                     weight >= 500
                 }
                 _ => false
             };
-            styles.insert("androidFontBold".to_string(), serde_json::json!(is_bold));
+            if is_bold {
+                styles.insert("androidTypefaceStyle".to_string(), serde_json::json!("bold"));
+            }
         }
         
         // Convert boxShadow to elevation
@@ -547,8 +791,18 @@ impl State {
             if let Some(entry) = self.themes.get(&name) {
                 // merge selectors: later (child) overrides earlier (parent/default)
                 for (sel, props) in entry.selectors.iter() {
-                    let e = selectors.entry(sel.clone()).or_default();
-                    merge_props(e, props);
+                    // Support multiple selectors separated by commas (e.g., "h1, h2, h3")
+                    if sel.contains(',') {
+                        for s in sel.split(',') {
+                            let s = s.trim();
+                            if s.is_empty() { continue; }
+                            let e = selectors.entry(s.to_string()).or_default();
+                            merge_props(e, props);
+                        }
+                    } else {
+                        let e = selectors.entry(sel.clone()).or_default();
+                        merge_props(e, props);
+                    }
                 }
                 // merge variables
                 for (k, v) in entry.variables.iter() {
@@ -641,20 +895,18 @@ pub fn render_css_for_web(state_json: &str) -> String {
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub fn get_rn_styles(state_json: &str, selector: &str, classes_json: &str) -> String {
+pub fn get_android_styles(state_json: &str, selector: &str, classes_json: &str) -> String {
     let classes: Vec<String> = serde_json::from_str(classes_json).unwrap_or_default();
     match serde_json::from_str::<State>(state_json) {
-        Ok(s) => serde_json::to_string(&s.rn_styles_for(selector, &classes)).unwrap_or_else(|_| "{}".into()),
+        Ok(s) => serde_json::to_string(&s.android_styles_for(selector, &classes)).unwrap_or_else(|_| "{}".into()),
         Err(_) => "{}".into(),
     }
 }
 
-/// Android-specific accessor for styles; currently mirrors RN mapping.
-/// Kept distinct to allow future Android-only adjustments without changing RN/web.
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
 pub fn get_android_styles(state_json: &str, selector: &str, classes_json: &str) -> String {
-    get_rn_styles(state_json, selector, classes_json)
+    get_android_styles(state_json, selector, classes_json)
 }
 
 // Expose crate version to JS via wasm-bindgen
@@ -1042,7 +1294,7 @@ fn camel_case(name: &str) -> String {
     out
 }
 
-fn css_value_to_rn(
+fn css_value_to_android(
     value: &serde_json::Value,
     vars: &IndexMap<String, String>,
 ) -> serde_json::Value {
@@ -1060,20 +1312,75 @@ fn css_value_to_rn(
     }
 }
 
-fn merge_rn_props(
+fn merge_android_props(
     into: &mut IndexMap<String, serde_json::Value>,
     css_props: &CssProps,
     vars: &IndexMap<String, String>,
 ) {
     for (k, v) in css_props.iter() {
-        let rn_key = match k.as_str() {
-            // Minimal explicit mappings
-            "background-color" => "backgroundColor".to_string(),
-            "text-align" => "textAlign".to_string(),
-            _ => camel_case(k),
-        };
-        let rn_val = css_value_to_rn(v, vars);
-        into.insert(rn_key, rn_val);
+        let val = css_value_to_android(v, vars);
+        
+        match k.as_str() {
+            "padding" => {
+                into.insert("paddingTop".to_string(), val.clone());
+                into.insert("paddingBottom".to_string(), val.clone());
+                into.insert("paddingLeft".to_string(), val.clone());
+                into.insert("paddingRight".to_string(), val.clone());
+                into.insert("paddingHorizontal".to_string(), val.clone());
+                into.insert("paddingVertical".to_string(), val.clone());
+                into.insert("padding".to_string(), val);
+            }
+            "padding-horizontal" | "paddingHorizontal" => {
+                into.insert("paddingLeft".to_string(), val.clone());
+                into.insert("paddingRight".to_string(), val.clone());
+                into.insert("paddingHorizontal".to_string(), val);
+            }
+            "padding-vertical" | "paddingVertical" => {
+                into.insert("paddingTop".to_string(), val.clone());
+                into.insert("paddingBottom".to_string(), val.clone());
+                into.insert("paddingVertical".to_string(), val);
+            }
+            "margin" => {
+                into.insert("marginTop".to_string(), val.clone());
+                into.insert("marginBottom".to_string(), val.clone());
+                into.insert("marginLeft".to_string(), val.clone());
+                into.insert("marginRight".to_string(), val.clone());
+                into.insert("marginHorizontal".to_string(), val.clone());
+                into.insert("marginVertical".to_string(), val.clone());
+                into.insert("margin".to_string(), val);
+            }
+            "margin-horizontal" | "marginHorizontal" => {
+                into.insert("marginLeft".to_string(), val.clone());
+                into.insert("marginRight".to_string(), val.clone());
+                into.insert("marginHorizontal".to_string(), val);
+            }
+            "margin-vertical" | "marginVertical" => {
+                into.insert("marginTop".to_string(), val.clone());
+                into.insert("marginBottom".to_string(), val.clone());
+                into.insert("marginVertical".to_string(), val);
+            }
+            "border-radius" | "borderRadius" => {
+                into.insert("borderTopLeftRadius".to_string(), val.clone());
+                into.insert("borderTopRightRadius".to_string(), val.clone());
+                into.insert("borderBottomLeftRadius".to_string(), val.clone());
+                into.insert("borderBottomRightRadius".to_string(), val.clone());
+                into.insert("borderRadius".to_string(), val);
+            }
+            "background-color" => { into.insert("backgroundColor".to_string(), val); }
+            "text-align" => { into.insert("textAlign".to_string(), val); }
+            "flex-direction" | "flexDirection" => {
+                let orientation = if val.as_str() == Some("column") || val.as_str() == Some("column-reverse") {
+                    "vertical"
+                } else {
+                    "horizontal"
+                };
+                into.insert("androidOrientation".to_string(), serde_json::json!(orientation));
+                into.insert("flexDirection".to_string(), val);
+            }
+            _ => {
+                into.insert(camel_case(k), val);
+            }
+        }
     }
 }
 
@@ -1091,13 +1398,22 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
     // Flexbox shorthands
     match class {
         "flex" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); return Some(p); }
-        "flex-row" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-direction".into(), json!("row")); return Some(p); }
-        "flex-col" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-direction".into(), json!("column")); return Some(p); }
+        "flex-row" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flexDirection".into(), json!("row")); return Some(p); }
+        "flex-col" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flexDirection".into(), json!("column")); return Some(p); }
         "flex-wrap" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-wrap".into(), json!("wrap")); return Some(p); }
         "flex-nowrap" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-wrap".into(), json!("nowrap")); return Some(p); }
         "flex-wrap-reverse" => { let mut p = CssProps::new(); p.insert("display".into(), json!("flex")); p.insert("flex-wrap".into(), json!("wrap-reverse")); return Some(p); }
         "flex-1" => { let mut p = CssProps::new(); p.insert("flex".into(), json!(1)); return Some(p); }
+        "w-full" => { let mut p = CssProps::new(); p.insert("width".into(), json!("match_parent")); return Some(p); }
+        "h-full" => { let mut p = CssProps::new(); p.insert("height".into(), json!("match_parent")); return Some(p); }
         _ => {}
+    }
+    if let Some(value) = class.strip_prefix("z-") {
+        if let Ok(z) = value.parse::<i32>() {
+            let mut p = CssProps::new();
+            p.insert("elevation".into(), json!(z));
+            return Some(p);
+        }
     }
     if let Some(rest) = class.strip_prefix("items-") {
         let mut p = CssProps::new();
@@ -1127,20 +1443,42 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
     }
     // Margin utilities
     if let Some(value) = class.strip_prefix("m-") {
+        if value == "auto" {
+            let mut p = CssProps::new();
+            p.insert("margin".into(), json!("auto"));
+            return Some(p);
+        }
         return parse_tailwind_spacing(value, &|px| margin_props(&["margin"], px));
     }
     if let Some(value) = class.strip_prefix("mx-") {
+        if value == "auto" {
+            let mut p = CssProps::new();
+            p.insert("margin-left".into(), json!("auto"));
+            p.insert("margin-right".into(), json!("auto"));
+            return Some(p);
+        }
         return parse_tailwind_spacing(value, &|px| margin_props(&["margin-left", "margin-right"], px));
     }
     if let Some(value) = class.strip_prefix("my-") {
+        if value == "auto" {
+            let mut p = CssProps::new();
+            p.insert("margin-top".into(), json!("auto"));
+            p.insert("margin-bottom".into(), json!("auto"));
+            return Some(p);
+        }
         return parse_tailwind_spacing(value, &|px| margin_props(&["margin-top", "margin-bottom"], px));
     }
     for &(prefix, prop) in &[("mt-", "margin-top"), ("mr-", "margin-right"), ("mb-", "margin-bottom"), ("ml-", "margin-left")] {
         if let Some(value) = class.strip_prefix(prefix) {
+            if value == "auto" {
+                let mut p = CssProps::new();
+                p.insert(prop.into(), json!("auto"));
+                return Some(p);
+            }
             return parse_tailwind_spacing(value, &|px| margin_props(&[prop], px));
         }
     }
-    // Gap utilities (works in RN 0.71+ with Flexbox)
+    // Gap utilities (works in Android with Flexbox)
     if let Some(value) = class.strip_prefix("gap-") {
         if !value.starts_with("x-") && !value.starts_with("y-") {
             return parse_tailwind_spacing(value, &|px| {
@@ -1237,6 +1575,14 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
         "overflow-y-scroll" => { let mut p = CssProps::new(); p.insert("overflow-y".into(), json!("scroll")); return Some(p); }
         _ => {}
     }
+    // Opacity utilities
+    if let Some(value) = class.strip_prefix("opacity-") {
+        if let Ok(opacity) = value.parse::<f32>() {
+            let mut p = CssProps::new();
+            p.insert("opacity".into(), json!(opacity / 100.0));
+            return Some(p);
+        }
+    }
     // Shadow utilities (basic cross-platform support)
     match class {
         "shadow-sm" => { let mut p = CssProps::new(); p.insert("box-shadow".into(), json!("0 1px 2px 0 rgba(0, 0, 0, 0.05)")); return Some(p); }
@@ -1262,6 +1608,12 @@ fn dynamic_css_properties_for_class(class: &str, vars: &IndexMap<String, String>
     }
     // bg-{color}-{shade}
     if let Some(rest) = class.strip_prefix("bg-") {
+        match rest {
+            "white" => { let mut p = CssProps::new(); p.insert("background-color".into(), json!("#ffffff")); return Some(p); }
+            "black" => { let mut p = CssProps::new(); p.insert("background-color".into(), json!("#000000")); return Some(p); }
+            "transparent" => { let mut p = CssProps::new(); p.insert("background-color".into(), json!("#00000000")); return Some(p); }
+            _ => {}
+        }
         if let Some(hex) = get_tailwind_color_with_vars(rest, vars) {
             let mut props = CssProps::new();
             props.insert("background-color".into(), json!(hex));
@@ -1756,7 +2108,7 @@ mod tests {
     }
 
     #[test]
-    fn rn_conversion() {
+    fn android_conversion() {
         let mut st = State::new_default();
         // Add a theme with button styles
         let mut styles = IndexMap::new();
@@ -1766,7 +2118,7 @@ mod tests {
         st.add_theme("default", styles);
         st.set_theme("default").ok();
         
-        let out = st.rn_styles_for("button", &[]);
+        let out = st.android_styles_for("button", &[]);
         assert!(out.get("backgroundColor").is_some());
     }
 
@@ -1814,6 +2166,50 @@ mod tests {
         let css = st.css_for_web();
         assert!(css.contains(".border-blue-500{"));
         assert!(css.contains("border-color:#3b82f6"));
+    }
+
+    #[test]
+    fn multiple_selectors_support() {
+        let mut st = State::new_default();
+        let mut selectors = SelectorStyles::new();
+        let mut props = CssProps::new();
+        props.insert("color".to_string(), serde_json::json!("#ff0000"));
+        selectors.insert("h1, h2, h3".to_string(), props);
+        
+        st.add_theme("test", selectors);
+        st.set_theme("test").ok();
+        
+        // Test h1
+        let android = st.android_styles_for("h1", &[]);
+        assert_eq!(android.get("color").and_then(|v| v.as_str()), Some("#ff0000"), "h1 should have red color");
+        
+        // Test h2
+        let android = st.android_styles_for("h2", &[]);
+        assert_eq!(android.get("color").and_then(|v| v.as_str()), Some("#ff0000"), "h2 should have red color");
+        
+        // Test h3
+        let android = st.android_styles_for("h3", &[]);
+        assert_eq!(android.get("color").and_then(|v| v.as_str()), Some("#ff0000"), "h3 should have red color");
+    }
+
+    #[test]
+    fn multiple_selectors_classes() {
+        let mut st = State::new_default();
+        let mut selectors = SelectorStyles::new();
+        let mut props = CssProps::new();
+        props.insert("padding".to_string(), serde_json::json!("10px"));
+        selectors.insert(".btn, .link".to_string(), props);
+        
+        st.add_theme("test", selectors);
+        st.set_theme("test").ok();
+        
+        // Test .btn
+        let android = st.android_styles_for("div", &["btn".to_string()]);
+        assert_eq!(android.get("padding").and_then(|v| v.as_f64()), Some(10.0), ".btn should have 10px padding");
+        
+        // Test .link
+        let android = st.android_styles_for("div", &["link".to_string()]);
+        assert_eq!(android.get("padding").and_then(|v| v.as_f64()), Some(10.0), ".link should have 10px padding");
     }
 
     #[test]
@@ -1865,9 +2261,9 @@ mod tests {
         // hover inside media (substring check)
         assert!(css.contains(":hover{display:block"));
 
-        // RN resolves base class styles ignoring prefixes
-        let rn = st.rn_styles_for("div", &["md:flex".into()]);
-        assert_eq!(rn.get("display").and_then(|v| v.as_str()), Some("flex"));
+        // Android resolves base class styles ignoring prefixes
+        let android = st.android_styles_for("div", &["md:flex".into()]);
+        assert_eq!(android.get("display").and_then(|v| v.as_str()), Some("flex"));
     }
 
     #[test]
@@ -1966,6 +2362,139 @@ mod tests {
         // Test var with underscores
         vars.insert("my_var".to_string(), "test".to_string());
         assert_eq!(resolve_vars("var(my_var)", &vars), "test");
+    }
+
+    #[test]
+    fn test_android_scrolling_mapping() {
+        let mut state = State::default();
+        state.display_density = 2.0;
+        state.scaled_density = 2.0;
+        state.current_theme = "default".to_string();
+        
+        let mut themes = IndexMap::new();
+        let mut default_theme = crate::ThemeEntry::default();
+        default_theme.name = Some("Default".to_string());
+        
+        let mut overflow_styles = IndexMap::new();
+        overflow_styles.insert("overflowX".to_string(), serde_json::json!("auto"));
+        overflow_styles.insert("overflowY".to_string(), serde_json::json!("scroll"));
+        
+        default_theme.selectors.insert(".scroller".to_string(), overflow_styles);
+        themes.insert("default".to_string(), default_theme);
+        state.themes = themes;
+        
+        let styles = state.android_styles_for("div", &vec![".scroller".to_string()]);
+        
+        assert_eq!(styles.get("androidScrollHorizontal"), Some(&serde_json::json!(true)));
+        assert_eq!(styles.get("androidScrollVertical"), Some(&serde_json::json!(true)));
+    }
+
+    #[test]
+    fn android_flex_row_default() {
+        let st = State::new_default();
+        // div with flex class should be horizontal (row) on Android
+        let styles = st.android_styles_for("div", &["flex".to_string()]);
+        assert_eq!(styles.get("androidOrientation").and_then(|v| v.as_str()), Some("horizontal"));
+        assert_eq!(styles.get("flexDirection").and_then(|v| v.as_str()), Some("row"));
+        
+        // div without flex class should be vertical (column) on Android
+        let styles = st.android_styles_for("div", &[]);
+        assert_eq!(styles.get("androidOrientation").and_then(|v| v.as_str()), Some("vertical"));
+        assert_eq!(styles.get("flexDirection").and_then(|v| v.as_str()), Some("column"));
+    }
+
+    #[test]
+    fn android_gap_orientation_order() {
+        let st = State::new_default();
+        let styles = st.android_styles_for("div", &["flex".to_string(), "gap-4".to_string()]);
+        
+        // Check that androidOrientation comes BEFORE gap in the map
+        let keys: Vec<&String> = styles.keys().collect();
+        let orientation_idx = keys.iter().position(|&k| k == "androidOrientation").unwrap();
+        let gap_idx = keys.iter().position(|&k| k == "gap").unwrap();
+        
+        assert!(orientation_idx < gap_idx, "androidOrientation should come before gap for correct layout processing");
+    }
+
+    #[test]
+    fn margin_auto_support() {
+        let mut st = State::new_default();
+        st.register_tailwind_classes(["ml-auto".to_string(), "mr-auto".to_string(), "mx-auto".to_string()]);
+        
+        // Web CSS check
+        let css = st.css_for_web();
+        assert!(css.contains("margin-left:auto"));
+        assert!(css.contains("margin-right:auto"));
+        
+        // Android check
+        let styles = st.android_styles_for("div", &["ml-auto".to_string()]);
+        assert_eq!(styles.get("marginLeft").and_then(|v| v.as_str()), Some("auto"));
+        
+        let styles = st.android_styles_for("div", &["mx-auto".to_string()]);
+        assert_eq!(styles.get("marginLeft").and_then(|v| v.as_str()), Some("auto"));
+        assert_eq!(styles.get("marginRight").and_then(|v| v.as_str()), Some("auto"));
+    }
+
+    #[test]
+    fn alignment_mapping() {
+        let st = State::new_default();
+        
+        // Test Row (default)
+        let row_styles = st.android_styles_for("div", &["flex".to_string(), "justify-center".to_string(), "items-center".to_string()]);
+        assert_eq!(row_styles.get("androidOrientation").and_then(|v| v.as_str()), Some("horizontal"));
+        // Row: justify-center (horizontal) + items-center (vertical) -> center
+        assert_eq!(row_styles.get("androidGravity").and_then(|v| v.as_str()), Some("center"));
+        
+        // Test Column
+        let col_styles = st.android_styles_for("div", &["flex".to_string(), "flex-col".to_string(), "justify-center".to_string(), "items-center".to_string()]);
+        assert_eq!(col_styles.get("androidOrientation").and_then(|v| v.as_str()), Some("vertical"));
+        // Column: justify-center (vertical) + items-center (horizontal) -> center
+        assert_eq!(col_styles.get("androidGravity").and_then(|v| v.as_str()), Some("center"));
+
+        // Test Row Start/End
+        let row_start_styles = st.android_styles_for("div", &["flex".to_string(), "justify-start".to_string(), "items-end".to_string()]);
+        assert_eq!(row_start_styles.get("androidGravity").and_then(|v| v.as_str()), Some("bottom|start"));
+    }
+
+    #[test]
+    fn test_button_bg_override() {
+        let mut themes = IndexMap::new();
+        
+        let mut variables = IndexMap::new();
+        variables.insert("color.bg".to_string(), "#ffffff".to_string());
+        
+        let mut selectors = IndexMap::new();
+        let mut button_props = IndexMap::new();
+        button_props.insert("background-color".to_string(), json!("#2563eb"));
+        selectors.insert("button".to_string(), button_props);
+        
+        let default_theme = ThemeEntry {
+            name: Some("default".to_string()),
+            inherits: None,
+            selectors,
+            variables,
+            breakpoints: IndexMap::new(),
+        };
+        
+        themes.insert("default".to_string(), default_theme);
+        
+        let mut state = State::new_default();
+        state.themes = themes;
+        state.current_theme = "default".to_string();
+        
+        // Test button with bg-bg class and p-4
+        let classes = vec!["bg-bg".to_string(), "p-4".to_string()];
+        let styles = state.android_styles_for("button", &classes);
+        
+        println!("[test_button_bg_override] styles: {:?}", styles);
+        
+        // Should have white background from bg-bg, not blue from button selector
+        assert_eq!(styles.get("backgroundColor").and_then(|v: &serde_json::Value| v.as_str()), Some("#ffffff"));
+        
+        // Should have 16px padding from p-4, not 8px from button selector
+        // p-4 = 1rem = 16px (default)
+        assert_eq!(styles.get("paddingTop"), Some(&serde_json::json!(16)));
+        assert_eq!(styles.get("paddingVertical"), Some(&serde_json::json!(16)));
     }
 }
 

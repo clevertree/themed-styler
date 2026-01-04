@@ -77,9 +77,9 @@ pub extern "C" fn themed_styler_render_css(
     }
 }
 
-/// Get RN styles for selector and classes
+/// Get Android styles for selector and classes
 #[no_mangle]
-pub extern "C" fn themed_styler_get_rn_styles(
+pub extern "C" fn themed_styler_get_android_styles(
     selector_ptr: *const u8,
     selector_len: usize,
     classes_ptr: *const u8,
@@ -105,7 +105,7 @@ pub extern "C" fn themed_styler_get_rn_styles(
     let classes: Vec<String> = serde_json::from_str(&classes_json).unwrap_or_default();
     let themes: ThemesInput = serde_json::from_str(&themes_json).unwrap_or_default();
     let state = build_state(UsageSnapshot::default(), themes);
-    let styles = state.rn_styles_for(&selector, &classes);
+    let styles = state.android_styles_for(&selector, &classes);
 
     match serde_json::to_string(&styles) {
         Ok(json) => match std::ffi::CString::new(json) {

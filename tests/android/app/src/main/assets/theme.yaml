@@ -21,18 +21,6 @@ themes:
         color: "#ffffff"
         padding: 8
         borderRadius: 4
-      ".p-4":
-        padding: 16
-      ".text-blue-500":
-        color: "#3b82f6"
-      ".font-bold":
-        fontWeight: "bold"
-      ".bg-gray-100":
-        backgroundColor: "#f3f4f6"
-      ".rounded":
-        borderRadius: 8
-      ".shadow-lg":
-        elevation: 4
 
   light:
     inherits: default

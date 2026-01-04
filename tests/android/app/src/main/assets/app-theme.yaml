@@ -35,15 +35,15 @@ themes:
       ".border-color":
         border-color: "#e5e7eb"
       ".p-2":
-        padding: "8px"
+        padding: 8
       ".p-4":
-        padding: "16px"
+        padding: 16
       ".p-6":
-        padding: "24px"
+        padding: 24
       ".mb-4":
-        margin-bottom: "16px"
+        margin-bottom: 16
       ".mb-6":
-        margin-bottom: "24px"
+        margin-bottom: 24
       ".flex":
         display: "flex"
       ".flex-col":
@@ -96,15 +96,15 @@ themes:
       ".border-color":
         border-color: "#334155"
       ".p-2":
-        padding: "8px"
+        padding: 8
       ".p-4":
-        padding: "16px"
+        padding: 16
       ".p-6":
-        padding: "24px"
+        padding: 24
       ".mb-4":
-        margin-bottom: "16px"
+        margin-bottom: 16
       ".mb-6":
-        margin-bottom: "24px"
+        margin-bottom: 24
       ".flex":
         display: "flex"
       ".flex-col":
