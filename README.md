@@ -87,7 +87,7 @@ import { TSDiv, Text } from '@clevertree/themed-styler';
 
 const MyComponent = () => (
   <TSDiv tag="div" className="p-4 bg-surface text-primary">
-    <Text>Hello Relay!</Text>
+    <span>Hello Relay!</span>
   </TSDiv>
 );
 ```
@@ -198,7 +198,7 @@ async function startApp() {
 // In your component
 const MyComponent = () => (
   <TSDiv tag="view" className="p-4 bg-surface text-primary">
-    <Text>Hello Relay!</Text>
+    <span>Hello Relay!</span>
   </TSDiv>
 );
 ```

@@ -916,12 +916,6 @@ pub fn get_android_styles(state_json: &str, selector: &str, classes_json: &str) 
     }
 }
 
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub fn get_android_styles(state_json: &str, selector: &str, classes_json: &str) -> String {
-    get_android_styles(state_json, selector, classes_json)
-}
-
 // Expose crate version to JS via wasm-bindgen
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
@@ -1020,7 +1014,8 @@ fn merge_props(into: &mut CssProps, from: &CssProps) {
 fn css_props_string(props: &CssProps, vars: &IndexMap<String, String>) -> String {
     let mut buf = String::new();
     for (k, v) in props.iter() {
-        buf.push_str(k);
+        let key = crate::utils::kebab_case(k);
+        buf.push_str(&key);
         buf.push(':');
         let val = if v.is_string() {
             let s = v.as_str().unwrap();
@@ -2563,6 +2558,43 @@ mod tests {
         
         assert_eq!(styles.get("backgroundColor").and_then(|v| v.as_str()), Some("#3b82f6"));
     }
+
+    #[test]
+    fn test_css_kebab_case_conversion() {
+        let mut themes = IndexMap::new();
+        let mut selectors = IndexMap::new();
+        
+        let mut props = IndexMap::new();
+        // Use camelCase property which should be converted to kebab-case for web
+        props.insert("backgroundColor".to_string(), json!("#ffffff"));
+        props.insert("borderTopWidth".to_string(), json!(1));
+        selectors.insert("body".to_string(), props);
+        
+        let default_theme = ThemeEntry {
+            name: Some("default".to_string()),
+            inherits: None,
+            selectors,
+            variables: IndexMap::new(),
+            breakpoints: IndexMap::new(),
+        };
+        
+        themes.insert("default".to_string(), default_theme);
+        
+        let mut state = State::new_default();
+        state.themes = themes;
+        state.current_theme = "default".to_string();
+        
+        // Mark body as used so it's emitted
+        state.used_tags.insert("body".to_string());
+        
+        let css = state.css_for_web();
+        println!("[test_css_kebab_case_conversion] css: {}", css);
+        
+        assert!(css.contains("background-color:#ffffff;"));
+        assert!(css.contains("border-top-width:1;"));
+        assert!(!css.contains("backgroundColor:"));
+        assert!(!css.contains("borderTopWidth:"));
+    }
 }
 
 #[cfg(all(target_os = "android", feature = "android"))]
@@ -2570,6 +2602,7 @@ mod tests {
 mod android_jni;
 
 mod bridge_common;
+mod utils;
 mod ffi;
 
 pub use ffi::*;

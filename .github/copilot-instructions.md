@@ -64,6 +64,11 @@ pub struct State {
 ".text-themed": { "color": "#1f2937" }
 ```
 
+## JSX Tag Standards
+- Use `<span>` for text elements (mapped to `TextView` on Android).
+- **NEVER** use `<text>` as it is not a standard HTML tag and causes issues on Web.
+- Use `<div>` or `<view>` for containers (mapped to `LinearLayout` on Android).
+
 **Selector Format (CRITICAL)**: Class selectors MUST include the dot prefix (`.bg-primary`, not `bg-primary`)
 - Android renderer adds dot prefix to class names before calling nativeGetAndroidStyles()
 - Hook-transpiler's StyleCache also converts `bg-primary` → `.bg-primary`

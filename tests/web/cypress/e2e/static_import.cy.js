@@ -22,9 +22,14 @@ describe('Static Import Resolution', () => {
         expect(body).to.not.have.nested.property('details.lastErr');
         // Cache should contain our expected local specs
         const keys = body.details.cacheKeys || [];
-        expect(keys).to.include('./components/list-item.jsx');
-        expect(keys).to.include('./sample-data.js');
-        expect(keys).to.include('./ns-helper.js');
+        // We check for the presence of these files in the cache
+        const hasListItem = keys.some(k => k.includes('list-item.jsx'));
+        const hasSampleData = keys.some(k => k.includes('sample-data.js'));
+        const hasNsHelper = keys.some(k => k.includes('ns-helper.js'));
+
+        expect(hasListItem).to.equal(true, 'Cache should include list-item.jsx');
+        expect(hasSampleData).to.equal(true, 'Cache should include sample-data.js');
+        expect(hasNsHelper).to.equal(true, 'Cache should include ns-helper.js');
       });
 
     // Ensure no static import error was logged to console

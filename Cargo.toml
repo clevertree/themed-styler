@@ -49,6 +49,9 @@ exclude = [
 [lib]
 crate-type = ["cdylib", "rlib", "staticlib"]
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [features]
 default = []
 wasm = ["wasm-bindgen"]

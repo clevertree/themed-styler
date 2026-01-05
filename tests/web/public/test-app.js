@@ -40,6 +40,15 @@ async function main() {
     // 2. Themed Styler state
     document.getElementById('styler-state').textContent = 'Ready';
 
+    // Load theme.yaml
+    try {
+      console.log('Test App: Loading theme.yaml...');
+      await unifiedBridge.loadThemesFromYamlUrl('/hooks/theme.yaml');
+      console.log('Test App: theme.yaml loaded');
+    } catch (e) {
+      console.error('Test App: Failed to load theme.yaml:', e);
+    }
+
     // Start auto-sync for styles
     styleManager.startAutoSync();
 
@@ -56,28 +65,41 @@ async function main() {
     // Check if HookRenderer is a valid component
     console.log('Test App: HookRenderer type:', typeof HookRenderer);
 
-    const props = {
-      host: window.location.origin,
-      hookPath: "/hooks/test-hook.jsx",
-      onElement: (tag, props) => {
-        // console.log('registerUsage:', tag);
-        unifiedBridge.registerUsage(tag, props);
-      },
-      requestRender: () => styleManager.requestRender(),
-      renderCssIntoDom: () => styleManager.renderCssIntoDom(),
-      startAutoSync: (interval) => styleManager.startAutoSync(interval),
-      stopAutoSync: () => styleManager.stopAutoSync(),
-      registerTheme: (name, defs) => unifiedBridge.registerTheme(name, defs),
-      loadThemesFromYamlUrl: (url) => unifiedBridge.loadThemesFromYamlUrl(url)
+    const renderHook = (hookPath) => {
+      const props = {
+        host: window.location.origin,
+        hookPath: hookPath,
+        onElement: (tag, props) => {
+          // console.log('registerUsage:', tag);
+          unifiedBridge.registerUsage(tag, props);
+        },
+        requestRender: () => styleManager.requestRender(),
+        renderCssIntoDom: () => styleManager.renderCssIntoDom(),
+        startAutoSync: (interval) => styleManager.startAutoSync(interval),
+        stopAutoSync: () => styleManager.stopAutoSync(),
+        registerTheme: (name, defs) => unifiedBridge.registerTheme(name, defs),
+        loadThemesFromYamlUrl: (url) => unifiedBridge.loadThemesFromYamlUrl(url),
+        setCurrentTheme: (theme) => unifiedBridge.setCurrentTheme(theme),
+        getThemes: () => unifiedBridge.getThemes()
+      };
+
+      console.log('Test App: HookRenderer props:', props);
+
+      root.render(
+        <React.StrictMode>
+          <HookRenderer {...props} />
+        </React.StrictMode>
+      );
     };
 
-    console.log('Test App: HookRenderer props:', props);
+    // Initial render
+    const selector = document.getElementById('hook-selector');
+    renderHook(selector.value);
 
-    root.render(
-      <React.StrictMode>
-        <HookRenderer {...props} />
-      </React.StrictMode>
-    );
+    // Handle selection change
+    selector.addEventListener('change', (e) => {
+      renderHook(e.target.value);
+    });
 
     // Add e2e status indicator for tests
     const statusEl = document.createElement('div');

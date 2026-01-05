@@ -64,7 +64,7 @@ class ScopeEdgeCaseTest {
         // Verify this is in JSX (has opening tags)
         assertTrue("Should contain JSX elements", content.contains("<"))
         assertTrue("Should contain div element", content.contains("<div") || content.contains("div"))
-        assertTrue("Should contain text element", content.contains("<text") || content.contains("text"))
+        assertTrue("Should contain span element", content.contains("<span") || content.contains("span"))
         
         System.out.println("✓ Asset uses theme variables in JSX style properties")
     }

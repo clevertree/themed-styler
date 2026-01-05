@@ -70,9 +70,9 @@ class TranspilerJNITest {
                   padding: theme.spacing.medium,
                   backgroundColor: theme.colors.primary
                 }}>
-                  <text style={{
+                  <span style={{
                     color: theme.colors.secondary
-                  }}>Content</text>
+                  }}>Content</span>
                 </div>
               );
             }

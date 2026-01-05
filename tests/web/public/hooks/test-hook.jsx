@@ -1,81 +1,65 @@
-import { useEffect, useMemo, useState } from "react";
-import ListItem from "./components/list-item.jsx";
-import sample from "./sample-data.js";
-import { namespaceValue as nsValue, tags as nsTags } from "./ns-helper.js";
+import React, { useState } from 'react';
+import { setCurrentTheme, getThemes } from '@clevertree/themed-styler';
 
-const { items: seededItems, meta, mapNote } = sample;
+export default function ThemedDemo() {
+  // Initialize from themed-styler bridge state, then maintain local state for re-renders
+  const [theme, setTheme] = useState(() => getThemes().currentTheme || 'light');
 
-export default function TestHook(context = {}) {
-    console.log("[TestHook] Component function called");
-    const { env: { theme = "light" } = {} } = context;
-    const [items, setItems] = useState(seededItems);
-    const [{ lazyMessage, nestedMessage }, setLazyState] = useState({ lazyMessage: null, nestedMessage: null });
+  const toggleTheme = () => {
+    const themes = getThemes().themes;
+    const themeList = Object.keys(themes);
+    if (themeList.length === 0) return;
 
-    useEffect(() => {
-        let active = true;
+    const currentIndex = themeList.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % themeList.length;
+    const nextTheme = themeList[nextIndex];
 
-        console.log("[TestHook] Starting lazy imports...");
-        Promise.all([
-            import("./lazy-data.js"),
-            import("/hooks/lazy-data.js?x=1#frag"),
-            import("./nested/data.js"),
-            import("./dir/index.js")
-        ])
-            .then(([rel, abs, nested, dirIndex]) => {
-                console.log("[TestHook] Lazy imports resolved:", { rel: rel.default, abs: abs.default, nested: nested.default, dirIndex: dirIndex.default });
-                if (!active) return;
-                setLazyState({
-                    lazyMessage: `${rel.default} + ${abs.default}`,
-                    nestedMessage: `${nested.default} + ${dirIndex.default}`
-                });
-            })
-            .catch((err) => {
-                console.error("[TestHook] Lazy import failed:", err);
-                if (!active) return;
-                setLazyState({ lazyMessage: `Lazy load failed: ${err.message}`, nestedMessage: null });
-            });
+    setCurrentTheme(nextTheme);  // Update bridge state
+    setTheme(nextTheme);          // Update local state to trigger re-render
+  };
 
-        return () => {
-            active = false;
-        };
-    }, []);
+  // Auto-switch theme every 3 seconds for debugging
+  React.useEffect(() => {
+    const timer = setInterval(toggleTheme, 3000);
+    return () => clearInterval(timer);
+  }, [theme]);
 
-    const tagsById = useMemo(() => new Map(items.map(({ id, tags = [] }) => [id, tags])), [items]);
-    const [primaryTag, ...otherTags] = nsTags;
+  return (
+    <body>
+      <div className="p-4 rounded mb-6 bg-surface">
+        <span className="text-lg font-semibold mb-2">Current Theme:{' '}</span>
+        <span style={{ fontWeight: 'bold' }}>{theme.toUpperCase()}</span>
+      </div>
 
-    const addItem = () => {
-        const nextId = items.length + 1;
-        setItems([...items, { id: nextId, name: `Item ${nextId}`, tags: [primaryTag, ...otherTags].slice(0, 2) }]);
-    };
-
-    return <div className="p-4 bg-white text-gray-800 rounded shadow-lg">
-        <h1 className="text-2xl font-bold mb-1">{meta.title}</h1>
-        <p className="text-sm text-gray-500 mb-4">{meta.subtitle}</p>
-
-        <div className="space-y-2">
-            {items.map((item) => (
-                <ListItem key={item.id} item={item} tags={tagsById.get(item.id)} />
-            ))}
+      <div className="mb-6">
+        <span className="text-lg font-semibold mb-2">Color Palette</span>
+        <div className="flex flex-col gap-2">
+          <div className="p-4 rounded bg-primary">
+            <span>Primary Color (theme-aware)</span>
+          </div>
+          <div className="p-4 rounded bg-secondary">
+            <span>Secondary Color (theme-aware)</span>
+          </div>
+          <div className="p-4 rounded border-themed bg-surface">
+            <span className="text-themed">Surface with Border (theme-aware)</span>
+          </div>
         </div>
+      </div>
 
-        <div className="mt-4 flex gap-2">
-            <button className="px-3 py-1 bg-blue-600 text-white rounded" onClick={addItem}>Add item</button>
-            <span className="text-xs text-gray-600">{mapNote}</span>
+      <div className="mb-6">
+        <span className="text-lg font-semibold mb-2">Flex Layout</span>
+        <div className="flex flex-row p-2 rounded bg-surface">
+          <div className="p-3 rounded m-1 bg-primary flex-1">
+            <span>Box 1</span>
+          </div>
+          <div className="p-3 rounded m-1 bg-secondary flex-1">
+            <span>Box 2</span>
+          </div>
+          <div className="p-3 rounded m-1 bg-primary flex-1">
+            <span>Box 3</span>
+          </div>
         </div>
-
-        <div className="mt-4 p-2 bg-blue-50 text-blue-800 rounded">
-            <p>Lazy Data: {lazyMessage || "Loading..."}</p>
-            <p>Nested: {nestedMessage || "Loading nested..."}</p>
-        </div>
-
-        <div className="mt-4 p-2 bg-green-50 text-green-800 rounded">
-            <p>Namespace Value: {nsValue}</p>
-            <p>Primary tag: {primaryTag}</p>
-            <p>Theme from context: {theme}</p>
-        </div>
-
-        <div className="mt-4 text-sm text-gray-500">
-            <p>This string contains JSX-like text: {"<div>test</div>"}</p>
-        </div>
-    </div>;
+      </div>
+    </body>
+  );
 }

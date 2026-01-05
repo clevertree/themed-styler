@@ -1,4 +1,4 @@
-use indexmap::IndexMap;
+use indexmap::{IndexMap, IndexSet};
 use serde_json::json;
 use crate::CssProps;
 
@@ -69,6 +69,19 @@ pub fn camel_case(name: &str) -> String {
         if ch == '-' { upper = true; continue; }
         if upper { out.extend(ch.to_uppercase()); upper = false; }
         else { out.push(ch); }
+    }
+    out
+}
+
+pub fn kebab_case(name: &str) -> String {
+    let mut out = String::new();
+    for (i, ch) in name.chars().enumerate() {
+        if ch.is_uppercase() {
+            if i > 0 { out.push('-'); }
+            out.extend(ch.to_lowercase());
+        } else {
+            out.push(ch);
+        }
     }
     out
 }
@@ -221,7 +234,7 @@ pub fn should_emit_selector(
         return used_tags.contains(base)
             || used_tag_classes
                 .iter()
-                .any(|k| k.split('|').next() == Some(base));
+                .any(|k: &String| k.split('|').next() == Some(base));
     }
 
     // .class-only
@@ -230,7 +243,7 @@ pub fn should_emit_selector(
         return used_classes.contains(class_name)
             || used_tag_classes
                 .iter()
-                .any(|k| k.ends_with(&format!("|{}", class_name)));
+                .any(|k: &String| k.ends_with(&format!("|{}", class_name)));
     }
 
     // tag.class

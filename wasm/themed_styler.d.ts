@@ -34,21 +34,20 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly get_android_styles: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
-  readonly get_default_state_json: () => [number, number];
-  readonly get_theme_list_json: (a: number, b: number) => [number, number];
-  readonly get_version: () => [number, number];
-  readonly register_theme_json: (a: number, b: number, c: number, d: number) => [number, number];
-  readonly render_css_for_web: (a: number, b: number) => [number, number];
-  readonly set_theme_json: (a: number, b: number, c: number, d: number) => [number, number];
+  readonly get_android_styles: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
+  readonly get_default_state_json: (a: number) => void;
+  readonly get_theme_list_json: (a: number, b: number, c: number) => void;
+  readonly get_version: (a: number) => void;
+  readonly register_theme_json: (a: number, b: number, c: number, d: number, e: number) => void;
+  readonly render_css_for_web: (a: number, b: number, c: number) => void;
+  readonly set_theme_json: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly themed_styler_free_string: (a: number) => void;
   readonly themed_styler_render_css: (a: number) => number;
   readonly themed_styler_version: () => number;
-  readonly __wbindgen_externrefs: WebAssembly.Table;
-  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
-  readonly __wbindgen_malloc: (a: number, b: number) => number;
-  readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
-  readonly __wbindgen_start: () => void;
+  readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
+  readonly __wbindgen_export: (a: number, b: number) => number;
+  readonly __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
+  readonly __wbindgen_export3: (a: number, b: number, c: number) => void;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

@@ -30,8 +30,12 @@ class MainActivity : AppCompatActivity() {
         // Connect TabLayout to ViewPager2
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
             tab.text = when (position) {
-                0 -> "Test Hook"
+                0 -> "Themed Demo"
                 1 -> "Breakpoints"
+                2 -> "Style Keywords"
+                3 -> "String Keywords"
+                4 -> "RN Parity"
+                5 -> "Static Imports"
                 else -> "Tab"
             }
         }.attach()

@@ -151,9 +151,11 @@ class JSCManager(context: Context) : BaseJSCManager(context) {
     }
 
     private fun installThemedStylerBridge(context: JSContext) {
+        val isDarkMode = (this.context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
         try {
             context.evaluateScript("""
                 (function() {
+                    var isOsDarkMode = $isDarkMode;
                     if (!globalThis.__clevertree_packages) {
                         globalThis.__clevertree_packages = {};
                     }
@@ -169,12 +171,25 @@ class JSCManager(context: Context) : BaseJSCManager(context) {
                     if (!globalThis.__themed_styler_state) {
                         globalThis.__themed_styler_state = {
                             themes: {},
-                            currentTheme: 'light',
+                            currentTheme: 'default',
                             usage: { tags: new Set(), classes: new Set() }
                         };
                     }
                     
                     var state = globalThis.__themed_styler_state;
+
+                    function resolveThemeName(name) {
+                        if (!name || name === 'default') {
+                            if (isOsDarkMode) {
+                                var darkTheme = Object.keys(state.themes).find(function(t) { return t.toLowerCase().indexOf('dark') === 0; });
+                                if (darkTheme) return darkTheme;
+                            }
+                            if (state.themes['light']) return 'light';
+                            var keys = Object.keys(state.themes);
+                            return keys.length > 0 ? keys[0] : name;
+                        }
+                        return name;
+                    }
                     
                     globalThis.__clevertree_packages['@clevertree/themed-styler'] = {
                         setCurrentTheme: function(name) {
@@ -184,10 +199,12 @@ class JSCManager(context: Context) : BaseJSCManager(context) {
                         },
                         getThemes: function() {
                             console.log('[themed-styler] getThemes');
+                            var resolved = resolveThemeName(state.currentTheme);
                             return {
                                 themes: state.themes,
-                                currentTheme: state.currentTheme,
-                                current_theme: state.currentTheme
+                                currentTheme: resolved,
+                                current_theme: resolved,
+                                default_theme: state.currentTheme || 'default'
                             };
                         },
                         getThemeList: function() {

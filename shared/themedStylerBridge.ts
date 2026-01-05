@@ -16,7 +16,29 @@ const usage = {
 }
 
 const themes: Record<string, Record<string, any>> = {}
-let currentTheme: string | null = null
+let currentTheme: string | null = typeof localStorage !== 'undefined' ? localStorage.getItem('relay_theme') : null
+
+function isDarkMode() {
+  if (typeof window !== 'undefined' && window.matchMedia) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
+  return false
+}
+
+function resolveThemeName(name: string | null): string | null {
+  if (!name || name === 'default') {
+    if (isDarkMode()) {
+      // Search for theme starting with 'dark'
+      const darkTheme = Object.keys(themes).find((t) => t.toLowerCase().startsWith('dark'))
+      if (darkTheme) return darkTheme
+    }
+    // Fallback to 'light' if it exists, otherwise first theme
+    if (themes['light']) return 'light'
+    const keys = Object.keys(themes)
+    return keys.length > 0 ? keys[0] : name
+  }
+  return name
+}
 
 export function registerUsage(tag: string, props?: Props, hierarchy?: HierNode[]) {
   const cls = props ? ((props.className || props.class || '') as string) : ''
@@ -60,6 +82,11 @@ export function registerTheme(name: string, defs?: Record<string, unknown>) {
 
 export function setCurrentTheme(name: string) {
   currentTheme = name
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem('relay_theme', name)
+    } catch (e) { /* ignore */ }
+  }
   // Expose current themes state globally for wasmEntry's theme list function
   if (typeof globalThis !== 'undefined') {
     ; (globalThis as any).__bridgeGetThemes = () => getThemes()
@@ -76,11 +103,12 @@ export function setCurrentTheme(name: string) {
 }
 
 export function getThemes() {
+  const resolvedTheme = resolveThemeName(currentTheme)
   return {
     themes: { ...themes },
-    currentTheme,
-    current_theme: currentTheme,
-    default_theme: currentTheme,
+    currentTheme: resolvedTheme,
+    current_theme: resolvedTheme,
+    default_theme: currentTheme || 'default',
     variables: {},
     breakpoints: {},
   }

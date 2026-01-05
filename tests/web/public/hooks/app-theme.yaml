@@ -1,0 +1,114 @@
+themes:
+  light:
+    breakpoints:
+      sm: 640
+      md: 768
+      lg: 1024
+      xl: 1280
+      "2xl": 1536
+    variables:
+      primary: "#3b82f6"
+      secondary: "#8b5cf6"
+      success: "#10b981"
+      warning: "#f59e0b"
+      danger: "#ef4444"
+      background: "#ffffff"
+      surface: "#f3f4f6"
+      text: "#1f2937"
+      textMuted: "#6b7280"
+      border: "#e5e7eb"
+    selectors:
+      body:
+        background-color: "#ffffff"
+        color: "#1f2937"
+        font-family: "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif"
+      button:
+        background-color: "#3b82f6"
+        color: "#ffffff"
+        border-radius: 6
+        padding: "8px 12px"
+        border: "none"
+      ".bg-surface":
+        background-color: "#f3f4f6"
+      ".text-muted":
+        color: "#6b7280"
+      ".border-color":
+        border-color: "#e5e7eb"
+      ".p-2":
+        padding: 8
+      ".p-4":
+        padding: 16
+      ".p-6":
+        padding: 24
+      ".mb-4":
+        margin-bottom: 16
+      ".mb-6":
+        margin-bottom: 24
+      ".flex":
+        display: "flex"
+      ".flex-col":
+        display: "flex"
+        flex-direction: "column"
+      ".rounded":
+        border-radius: 8
+
+  dark:
+    breakpoints:
+      sm: 640
+      md: 768
+      lg: 1024
+      xl: 1280
+      "2xl": 1536
+    variables:
+      primary: "#60a5fa"
+      secondary: "#a78bfa"
+      success: "#34d399"
+      warning: "#fbbf24"
+      danger: "#f87171"
+      background: "#0f172a"
+      surface: "#1e293b"
+      text: "#f1f5f9"
+      textMuted: "#cbd5e1"
+      border: "#334155"
+    selectors:
+      body:
+        background-color: "#0f172a"
+        color: "#f1f5f9"
+        font-family: "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif"
+      button:
+        background-color: "#2563eb"
+        color: "#ffffff"
+        border-radius: 6
+        padding: "8px 12px"
+        border: "none"
+      ".bg-surface":
+        background-color: "#6d28d9"
+      ".bg-success":
+        background-color: "#047857"
+      ".bg-warning":
+        background-color: "#b45309"
+      ".bg-danger":
+        background-color: "#dc2626"
+      ".bg-surface":
+        background-color: "#1e293b"
+      ".text-muted":
+        color: "#cbd5e1"
+      ".border-color":
+        border-color: "#334155"
+      ".p-2":
+        padding: 8
+      ".p-4":
+        padding: 16
+      ".p-6":
+        padding: 24
+      ".mb-4":
+        margin-bottom: 16
+      ".mb-6":
+        margin-bottom: 24
+      ".flex":
+        display: "flex"
+      ".flex-col":
+        display: "flex"
+        flex-direction: "column"
+      ".rounded":
+        border-radius: 8

@@ -1,0 +1,34 @@
+themes:
+  default:
+    variables:
+      bg: "#ffffff"
+      surface: "#f5f6fb"
+      text: "#1f2937"
+      muted: "#6b7280"
+      primary: "#3b82f6"
+      border: "#e5e7eb"
+    selectors:
+      body:
+        backgroundColor: "var(bg)"
+      "span, button, h1, h2, h3, h4, h5, h6, p":
+        color: "var(text)"
+      ".bg-surface":
+        backgroundColor: "var(surface)"
+      ".bg-primary":
+        backgroundColor: "var(primary)"
+      ".text-muted":
+        color: "var(muted)"
+      ".border-themed":
+        borderColor: "var(border)"
+        borderWidth: 1
+  light:
+    inherits: default
+  dark:
+    inherits: default
+    variables:
+      bg: "#111827"
+      surface: "#1f2937"
+      text: "#f9fafb"
+      muted: "#9ca3af"
+      primary: "#60a5fa"
+      border: "#374151"
