@@ -1,133 +1,36 @@
 themes:
   default:
-    breakpoints:
-      sm: 640
-      md: 768
-      lg: 1024
-      xl: 1280
-      "2xl": 1536
+    variables:
+      bg: "#ffffff"
+      surface: "#f5f6fb"
+      text: "#111b26"
+      muted: "#5f6b7a"
+      primary: "#1f73ff"
+      border: "#d9dee7"
     selectors:
       body:
-        background-color: "#0f172a"
-        color: "#f8fafc"
-        font-family: "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif"
-      button:
-        background-color: "#2563eb"
-        color: "#ffffff"
-        border-radius: 6
-        padding: "8px 12px"
-      div:
-        padding: "4px"
-      "h1, h2, h3, h4, h5, h6":
-        margin-top: "1.5rem"
-        margin-bottom: "0.5rem"
-        line-height: "1.2"
-      h1:
-        font-size: "2.2rem"
-        padding-bottom: "0.35rem"
-      h2:
-        font-size: "1.75rem"
-        padding-bottom: "0.25rem"
-      p:
-        margin-bottom: "1rem"
-      "ul, ol":
-        margin-left: "1.25rem"
-        margin-bottom: "1rem"
-      blockquote:
-        border-left: "4px solid var(color.primary)"
-        padding-left: "1rem"
-      code:
-        background-color: "var(color.bg)"
-        border: "1px solid var(color.border)"
-        border-radius: "0.5rem"
-        padding: "0.2rem 0.4rem"
-        font-family: "'JetBrains Mono', 'Fira Code', Consolas, monospace"
-      pre:
-        background-color: "var(color.bg)"
-        border: "1px solid var(color.border)"
-        border-radius: "0.75rem"
-        padding: "1rem"
-        overflow-x: auto
-      ".table":
+        backgroundColor: "var(bg)"
         width: "100%"
-        margin-vertical: 10
-        border: "1px solid #eeeeee"
-      ".table-row":
-        flex-direction: "row"
-        border-bottom: "1px solid #eeeeee"
-      ".table-cell":
-        padding: 8
-        flex: 1
-      ".table-header":
-        font-weight: "bold"
-        background-color: "#f9fafb"
-        color: "#111827"
-```
-      table:
-        width: "100%"
-        border-collapse: collapse
-        margin-bottom: "1rem"
-      "td, th":
-        border: "1px solid var(color.border)"
-        padding: "0.75rem"
-      th:
-        background-color: "var(color.surface)"
-        font-weight: 600
-      hr:
-        border: 0
-        height: "1px"
-        background-color: "var(color.border)"
-        margin: "2rem 0"
-    variables:
-      color:
-        text: "#111b26"
-        bg: "#ffffff"
-        surface: "#f5f6fb"
-        border: "#d9dee7"
-        muted: "#5f6b7a"
-        primary: "#1f73ff"
-        primary-strong: "#0f59d2"
-        danger: "#e75b64"
-    breakpoints:
-      xs: "480px"
-      sm: "640px"
-      md: "768px"
-      lg: "1024px"
-      xl: "1280px"
-  dark:
-    # Inherits from default
-    inherits: default
-    selectors:
-      # Inherits from default; add only overrides here (example keeps colors)
-      body:
-        background-color: "#0f172a"
-        color: "#f8fafc"
-    variables:
-      color:
-        bg: "#0f172a"
-        surface: "#161b22"
-        border: "#30363d"
-        text: "#f8fafc"
-        muted: "#adb5c7"
-        primary: "#58a6ff"
-        primary-strong: "#2187ff"
+        height: "100%"
+      "span, button, h1, h2, h3, h4, h5, h6, p":
+        color: "var(text)"
+      ".bg-surface":
+        backgroundColor: "var(surface)"
+      ".bg-primary":
+        backgroundColor: "var(primary)"
+      ".text-muted":
+        color: "var(muted)"
+      ".border-themed":
+        borderColor: "var(border)"
+        borderWidth: 1
   light:
-    # Inherits from default
     inherits: default
-    selectors:
-      body:
-        background-color: "#ffffff"
-        color: "#0f172a"
+  dark:
+    inherits: default
     variables:
-      color:
-        bg: "#ffffff"
-        surface: "#f5f6fb"
-        border: "#d9dee7"
-        text: "#111b26"
-        muted: "#5f6b7a"
-        primary: "#1f73ff"
-        primary-strong: "#0f59d2"
-default_theme: default
-current_theme: default
-used_selectors: []
-used_classes: []
+      bg: "#0f172a"
+      surface: "#1e293b"
+      text: "#f8fafc"
+      muted: "#94a3b8"
+      primary: "#3b82f6"
+      border: "#334155"

@@ -1,18 +1,12 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * Android-specific accessor for styles; currently mirrors RN mapping.
- * Kept distinct to allow future Android-only adjustments without changing RN/web.
- */
 export function get_android_styles(state_json: string, selector: string, classes_json: string): string;
 
 /**
  * Return the embedded default state as a JSON string.
  */
 export function get_default_state_json(): string;
-
-export function get_rn_styles(state_json: string, selector: string, classes_json: string): string;
 
 /**
  * Get all theme keys and names as JSON array: [{ "key": "default", "name": "Default Theme" }, ...]
@@ -47,14 +41,13 @@ export interface InitOutput {
   readonly register_theme_json: (a: number, b: number, c: number, d: number) => [number, number];
   readonly render_css_for_web: (a: number, b: number) => [number, number];
   readonly set_theme_json: (a: number, b: number, c: number, d: number) => [number, number];
-  readonly get_rn_styles: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
   readonly themed_styler_free_string: (a: number) => void;
-  readonly themed_styler_render_css: (a: number, b: number) => number;
+  readonly themed_styler_render_css: (a: number) => number;
   readonly themed_styler_version: () => number;
   readonly __wbindgen_externrefs: WebAssembly.Table;
+  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
-  readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_start: () => void;
 }
 

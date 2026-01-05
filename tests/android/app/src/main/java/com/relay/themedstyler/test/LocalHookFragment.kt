@@ -1,4 +1,4 @@
-package com.relay.test
+package com.relay.themedstyler.test
 
 import android.os.Bundle
 import android.view.LayoutInflater

@@ -12,8 +12,8 @@ static STATE: Lazy<RwLock<Option<State>>> = Lazy::new(|| RwLock::new(None));
 fn init_logger() {
     android_logger::init_once(
         Config::default()
-            .with_max_level(LevelFilter::Debug)
-            .with_tag("ThemedStylerRust"),
+            .with_max_level(LevelFilter::Trace)
+            .with_tag("THEMED_STYLER_RUST"),
     );
 }
 

@@ -84,8 +84,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb logcat com.relay.test:I -e "RENDER_SUCCESS|RENDER_VERIFIED"
 
 # Expected output:
-# [RENDER_SUCCESS] Renderer: ReactNative, Views: 29, Bridge calls: 75
-# [RENDER_VERIFIED] Correct renderer used: ReactNative
+# [RENDER_SUCCESS] Renderer: Android, Views: 29, Bridge calls: 75
+# [RENDER_VERIFIED] Correct renderer used: Android
 ```
 
 ## Code Architecture: jscbridge Integration

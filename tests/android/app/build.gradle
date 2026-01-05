@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.relay.test'
+    namespace 'com.relay.themedstyler.test'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.relay.test"
+        applicationId "com.relay.themedstyler.test"
         minSdk 24
         targetSdk 34
         versionCode 1
@@ -54,7 +54,9 @@ dependencies {
     
     // JSC Bridge
     implementation 'com.clevertree:jscbridge:1.0.0'
-    implementation 'com.clevertree:hook-transpiler-android:1.3.9'
+    implementation('com.clevertree:hook-transpiler-android:1.3.28') {
+        exclude group: 'com.clevertree', module: 'themed-styler-android'
+    }
     
     // Use local Android library project
     implementation project(':android')

@@ -2,6 +2,32 @@
 
 A high-performance styling engine for Relay that supports dynamic theme switching and consistent rendering across Web and Native platforms.
 
+## Architecture
+
+```mermaid
+graph TD
+    subgraph "Theme Definition"
+        YAML[theme.yaml]
+    end
+
+    subgraph "Styler Core (Rust)"
+        Parser[CSS/Style Parser]
+        Engine[Theme Engine]
+        Unit[Unit Converter]
+    end
+
+    subgraph "Output"
+        Web[WASM / CSS]
+        Android[JNI / Style Objects]
+    end
+
+    YAML --> Engine
+    Parser --> Engine
+    Engine --> Unit
+    Unit --> Web
+    Unit --> Android
+```
+
 ## Vision
 
 As part of the **Relay project vision**, we believe that design systems should be platform-agnostic and runtime-efficient. `@clevertree/themed-styler` allows developers to define themes once in YAML or JSON and have them applied consistently across Web (generating CSS) and Android/iOS Native (generating StyleSheets).
@@ -277,6 +303,34 @@ npm run test:e2e
 2. Verify `initThemedStyler()` completes without errors
 3. If you see "Native binding not available", ensure the Relay native library is properly compiled and linked
 4. Check logcat for JNI errors: `adb logcat | grep ThemedStyler`
+
+## Unit Conversion & Platform Parity
+
+`themed-styler` ensures consistent rendering across Web and Native by implementing a unified unit conversion system.
+
+### The `px-as-dp` Logic
+
+On Android and iOS Native, physical pixels (`px`) vary significantly between devices due to different screen densities. To maintain design consistency with Web, `themed-styler` treats the `px` unit in CSS as **Density-independent Pixels (dp)** when rendering for Native platforms.
+
+- **Web**: `10px` renders as exactly `10` physical pixels.
+- **Android/iOS**: `10px` is treated as `10dp` and converted to physical pixels based on the device's display density.
+  - On an `xhdpi` device (density = 2.0), `10px` becomes `20` physical pixels.
+  - On an `mdpi` device (density = 1.0), `10px` becomes `10` physical pixels.
+
+### Font Scaling (Accessibility)
+
+For text-related properties (like `fontSize`), `themed-styler` uses the device's **Scaled Density** instead of the base display density. This ensures that if a user has increased their system font size for accessibility, the Relay hooks will respect that setting.
+
+### Supported Units
+
+| Unit | Behavior |
+|------|----------|
+| `px` | Treated as `dp` on Native, physical pixels on Web. |
+| `dp` | Explicit density-independent pixels (Native only). |
+| `sp` | Scaled pixels for text (Native only). |
+| `%`  | Percentage of parent container. |
+| `rem`| Root-relative units (converted to `16px` base by default). |
+| `vh`/`vw`| Viewport-relative units (Web only). |
 
 ## Contributing
 

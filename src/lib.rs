@@ -5,6 +5,7 @@ use serde_json::json;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 mod default_state;
+mod color;
 use default_state::bundled_state;
 
 // Default display density (1.0 = mdpi baseline)
@@ -366,81 +367,105 @@ impl State {
         // Pre-insert androidOrientation to ensure it's early in the map for gap processing
         out.insert("androidOrientation".to_string(), serde_json::json!("vertical"));
 
+        let mut combined_props = CssProps::new();
+
         // 1. Apply hardcoded platform defaults (lowest priority)
-        let mut defaults = CssProps::new();
         match selector.to_lowercase().as_str() {
             "div" => {
-                defaults.insert("width".into(), json!("match_parent"));
+                combined_props.insert("width".into(), json!("match_parent"));
             }
             "p" => {
-                defaults.insert("width".into(), json!("match_parent"));
-                defaults.insert("margin-vertical".into(), json!("16px"));
+                combined_props.insert("width".into(), json!("match_parent"));
+                combined_props.insert("margin-vertical".into(), json!("16px"));
             }
             "h1" => {
-                defaults.insert("width".into(), json!("match_parent"));
-                defaults.insert("font-size".into(), json!("32px"));
-                defaults.insert("font-weight".into(), json!("bold"));
-                defaults.insert("margin-vertical".into(), json!("21.44px"));
+                combined_props.insert("width".into(), json!("match_parent"));
+                combined_props.insert("font-size".into(), json!("32px"));
+                combined_props.insert("font-weight".into(), json!("bold"));
+                combined_props.insert("margin-vertical".into(), json!("21.44px"));
             }
             "h2" => {
-                defaults.insert("width".into(), json!("match_parent"));
-                defaults.insert("font-size".into(), json!("24px"));
-                defaults.insert("font-weight".into(), json!("bold"));
-                defaults.insert("margin-vertical".into(), json!("19.92px"));
+                combined_props.insert("width".into(), json!("match_parent"));
+                combined_props.insert("font-size".into(), json!("24px"));
+                combined_props.insert("font-weight".into(), json!("bold"));
+                combined_props.insert("margin-vertical".into(), json!("19.92px"));
             }
             "h3" => {
-                defaults.insert("width".into(), json!("match_parent"));
-                defaults.insert("font-size".into(), json!("18.72px"));
-                defaults.insert("font-weight".into(), json!("bold"));
-                defaults.insert("margin-vertical".into(), json!("18.72px"));
+                combined_props.insert("width".into(), json!("match_parent"));
+                combined_props.insert("font-size".into(), json!("18.72px"));
+                combined_props.insert("font-weight".into(), json!("bold"));
+                combined_props.insert("margin-vertical".into(), json!("18.72px"));
             }
             "h4" => {
-                defaults.insert("width".into(), json!("match_parent"));
-                defaults.insert("font-size".into(), json!("16px"));
-                defaults.insert("font-weight".into(), json!("bold"));
-                defaults.insert("margin-vertical".into(), json!("21.28px"));
+                combined_props.insert("width".into(), json!("match_parent"));
+                combined_props.insert("font-size".into(), json!("16px"));
+                combined_props.insert("font-weight".into(), json!("bold"));
+                combined_props.insert("margin-vertical".into(), json!("21.28px"));
             }
             "h5" => {
-                defaults.insert("width".into(), json!("match_parent"));
-                defaults.insert("font-size".into(), json!("13.28px"));
-                defaults.insert("font-weight".into(), json!("bold"));
-                defaults.insert("margin-vertical".into(), json!("22.17px"));
+                combined_props.insert("width".into(), json!("match_parent"));
+                combined_props.insert("font-size".into(), json!("13.28px"));
+                combined_props.insert("font-weight".into(), json!("bold"));
+                combined_props.insert("margin-vertical".into(), json!("22.17px"));
             }
             "h6" => {
-                defaults.insert("width".into(), json!("match_parent"));
-                defaults.insert("font-size".into(), json!("10.72px"));
-                defaults.insert("font-weight".into(), json!("bold"));
-                defaults.insert("margin-vertical".into(), json!("24.96px"));
+                combined_props.insert("width".into(), json!("match_parent"));
+                combined_props.insert("font-size".into(), json!("10.72px"));
+                combined_props.insert("font-weight".into(), json!("bold"));
+                combined_props.insert("margin-vertical".into(), json!("24.96px"));
             }
             "input" => {
-                defaults.insert("padding-vertical".into(), json!("8px"));
-                defaults.insert("padding-horizontal".into(), json!("12px"));
-                defaults.insert("border-radius".into(), json!("4px"));
-                defaults.insert("border-width".into(), json!("1px"));
-                defaults.insert("border-color".into(), json!("#cccccc"));
-                defaults.insert("background-color".into(), json!("#ffffff"));
-                defaults.insert("min-height".into(), json!("40px"));
-                defaults.insert("android-gravity".into(), json!("center_vertical"));
+                combined_props.insert("padding-vertical".into(), json!("8px"));
+                combined_props.insert("padding-horizontal".into(), json!("12px"));
+                combined_props.insert("border-radius".into(), json!("4px"));
+                combined_props.insert("border-width".into(), json!("1px"));
+                combined_props.insert("border-color".into(), json!("#cccccc"));
+                combined_props.insert("background-color".into(), json!("#ffffff"));
+                combined_props.insert("color".into(), json!("#000000"));
+                combined_props.insert("placeholder-color".into(), json!("#88888870"));
+                combined_props.insert("min-height".into(), json!("40px"));
+                combined_props.insert("android-gravity".into(), json!("center_vertical"));
+            }
+            "select" => {
+                combined_props.insert("padding-vertical".into(), json!("8px"));
+                combined_props.insert("padding-horizontal".into(), json!("12px"));
+                combined_props.insert("border-radius".into(), json!("4px"));
+                combined_props.insert("border-width".into(), json!("1px"));
+                combined_props.insert("border-color".into(), json!("#cccccc"));
+                combined_props.insert("background-color".into(), json!("#ffffff"));
+                combined_props.insert("color".into(), json!("#000000"));
+                combined_props.insert("min-height".into(), json!("40px"));
+                combined_props.insert("android-gravity".into(), json!("center_vertical"));
+            }
+            "textarea" => {
+                combined_props.insert("padding".into(), json!("12px"));
+                combined_props.insert("border-radius".into(), json!("4px"));
+                combined_props.insert("border-width".into(), json!("1px"));
+                combined_props.insert("border-color".into(), json!("#cccccc"));
+                combined_props.insert("background-color".into(), json!("#ffffff"));
+                combined_props.insert("color".into(), json!("#000000"));
+                combined_props.insert("placeholder-color".into(), json!("color-mix(in srgb, currentColor 75%, grey)"));
+                combined_props.insert("min-height".into(), json!("80px"));
+                combined_props.insert("android-gravity".into(), json!("top"));
             }
             "button" => {
-                defaults.insert("padding-vertical".into(), json!("8px"));
-                defaults.insert("padding-horizontal".into(), json!("16px"));
-                defaults.insert("border-radius".into(), json!("4px"));
-                defaults.insert("background-color".into(), json!("#2196F3"));
-                defaults.insert("color".into(), json!("#ffffff"));
-                defaults.insert("android-gravity".into(), json!("center"));
+                combined_props.insert("padding-vertical".into(), json!("8px"));
+                combined_props.insert("padding-horizontal".into(), json!("16px"));
+                combined_props.insert("border-radius".into(), json!("4px"));
+                combined_props.insert("background-color".into(), json!("#2196F3"));
+                combined_props.insert("color".into(), json!("#ffffff"));
+                combined_props.insert("android-gravity".into(), json!("center"));
             }
             _ => {}
         }
-        merge_android_props(&mut out, &defaults, &vars);
 
-        if selector == "button" || classes.iter().any(|c| c.contains("bg-")) {
+        if selector == "button" || selector == "input" || selector == "textarea" || classes.iter().any(|c| c.contains("bg-")) {
             log::debug!("[android_base_styles] selector={} classes={:?}", selector, classes);
         }
 
         // 2. Apply theme selector styles (overwrites defaults)
         if let Some(props) = eff.get(selector) {
-            merge_android_props(&mut out, props, &vars);
+            merge_props(&mut combined_props, props);
         }
 
         // 3. Apply class styles (overwrites selector)
@@ -456,18 +481,24 @@ impl State {
             // Prefer base selector match from theme
             let sel = class_to_selector(&base);
             if let Some(props) = eff.get(&sel) {
-                merge_android_props(&mut out, props, &vars);
+                merge_props(&mut combined_props, props);
                 continue;
             }
             // Dynamic mapping for base class
             if let Some(dynamic_props) = dynamic_css_properties_for_class(&base, &vars) {
-                merge_android_props(&mut out, &dynamic_props, &vars);
+                merge_props(&mut combined_props, &dynamic_props);
                 continue;
             }
             if let Some(props) = eff.get(&base) {
-                merge_android_props(&mut out, props, &vars);
+                merge_props(&mut combined_props, props);
             }
         }
+
+        if selector == "input" || selector == "textarea" {
+            log::debug!("[android_base_styles] combined_props for {}: {:?}", selector, combined_props);
+        }
+
+        merge_android_props(&mut out, &combined_props, &vars);
         
         // CSS semantics: display: flex defaults to flexDirection: row
         if let Some(display) = out.get("display") {
@@ -1279,16 +1310,23 @@ fn camel_case(name: &str) -> String {
 fn css_value_to_android(
     value: &serde_json::Value,
     vars: &IndexMap<String, String>,
+    current_color: Option<&str>,
 ) -> serde_json::Value {
+    if let Some(s) = value.as_str() {
+        if s.contains("color-mix") {
+            log::debug!("[css_value_to_android] color-mix detected: {} current_color={:?}", s, current_color);
+        }
+    }
     match value {
         serde_json::Value::String(s) => {
             let s2 = resolve_vars(s, vars);
-            if let Some(n) = s2.strip_suffix("px") {
+            let s3 = color::resolve_color(&s2, current_color, vars);
+            if let Some(n) = s3.strip_suffix("px") {
                 if let Ok(parsed) = n.trim().parse::<f64>() {
                     return json!(parsed);
                 }
             }
-            json!(s2)
+            json!(s3)
         }
         _ => value.clone(),
     }
@@ -1299,9 +1337,27 @@ fn merge_android_props(
     css_props: &CssProps,
     vars: &IndexMap<String, String>,
 ) {
+    log::debug!("[merge_android_props] START props_count={}", css_props.len());
+    // 1. Find current color for currentColor resolution
+    let mut current_color = css_props.get("color")
+        .and_then(|v| v.as_str())
+        .map(|s| resolve_vars(s, vars));
+    
+    if current_color.is_none() {
+        current_color = into.get("color").and_then(|v| v.as_str()).map(|s| s.to_string());
+    }
+
+    if let Some(ref c) = current_color {
+        log::debug!("[merge_android_props] current_color resolved to: {}", c);
+    }
+
     for (k, v) in css_props.iter() {
-        let val = css_value_to_android(v, vars);
+        let val = css_value_to_android(v, vars, current_color.as_deref());
         
+        if k == "placeholder-color" || k == "placeholderColor" {
+            log::debug!("[merge_android_props] placeholder-color: input={:?} output={:?}", v, val);
+        }
+
         match k.as_str() {
             "padding" => {
                 into.insert("paddingTop".to_string(), val.clone());
@@ -2477,6 +2533,35 @@ mod tests {
         // p-4 = 1rem = 16px (default)
         assert_eq!(styles.get("paddingTop"), Some(&serde_json::json!(16)));
         assert_eq!(styles.get("paddingVertical"), Some(&serde_json::json!(16)));
+    }
+
+    #[test]
+    fn test_class_selector_matching() {
+        let mut themes = IndexMap::new();
+        let mut selectors = IndexMap::new();
+        
+        let mut bg_primary = IndexMap::new();
+        bg_primary.insert("background-color".to_string(), json!("#3b82f6"));
+        selectors.insert(".bg-primary".to_string(), bg_primary);
+        
+        let default_theme = ThemeEntry {
+            name: Some("default".to_string()),
+            inherits: None,
+            selectors,
+            variables: IndexMap::new(),
+            breakpoints: IndexMap::new(),
+        };
+        
+        themes.insert("default".to_string(), default_theme);
+        
+        let mut state = State::new_default();
+        state.themes = themes;
+        state.current_theme = "default".to_string();
+        
+        let classes = vec!["bg-primary".to_string()];
+        let styles = state.android_styles_for("div", &classes);
+        
+        assert_eq!(styles.get("backgroundColor").and_then(|v| v.as_str()), Some("#3b82f6"));
     }
 }
 

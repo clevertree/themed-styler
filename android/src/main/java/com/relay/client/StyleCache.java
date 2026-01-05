@@ -1,9 +1,9 @@
 package com.relay.client;
 
 import android.util.Log;
+import android.util.LruCache;
 import com.google.gson.Gson;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Unified style caching system for Android
@@ -11,10 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class StyleCache {
     private static final String TAG = "StyleCache";
+    private static final int MAX_CACHE_SIZE = 1000; // Max number of style entries
     private final Gson gson;
 
     // Computed style cache: key = selector|className, value = style properties map
-    private final ConcurrentHashMap<String, Map<String, Object>> styleCache = new ConcurrentHashMap<>();
+    // Using LruCache to prevent memory leaks
+    private final LruCache<String, Map<String, Object>> styleCache = new LruCache<>(MAX_CACHE_SIZE);
 
     public StyleCache(Gson gson) {
         this.gson = gson;
@@ -26,7 +28,11 @@ public class StyleCache {
      */
     public Map<String, Object> getStyles(String selector, String className) {
         String cacheKey = selector + "|" + className;
-        Map<String, Object> cachedStyles = styleCache.get(cacheKey);
+        Map<String, Object> cachedStyles;
+
+        synchronized (styleCache) {
+            cachedStyles = styleCache.get(cacheKey);
+        }
 
         if (cachedStyles != null) {
             return cachedStyles;
@@ -34,7 +40,10 @@ public class StyleCache {
 
         Log.d(TAG, "[Cache] Cache MISS for " + cacheKey + ", computing on-demand...");
         Map<String, Object> styles = computeStyleForElement(selector, className);
-        styleCache.put(cacheKey, styles);
+
+        synchronized (styleCache) {
+            styleCache.put(cacheKey, styles);
+        }
 
         return styles;
     }
@@ -78,6 +87,8 @@ public class StyleCache {
     }
 
     public void clear() {
-        styleCache.clear();
+        synchronized (styleCache) {
+            styleCache.evictAll();
+        }
     }
 }
