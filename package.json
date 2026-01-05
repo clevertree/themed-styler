@@ -32,12 +32,14 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "chokidar": "^5.0.0",
     "react": "^18.0.0 || ^19.0.0",
+    "ws": "^8.18.3",
     "yaml": "^2.3.0"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0",
-    "android-ios-native": "*"
+    "android-ios-native": "*",
+    "react": "^18.0.0 || ^19.0.0"
   },
   "peerDependenciesMeta": {
     "android-ios-native": {
@@ -45,10 +47,10 @@
     }
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
-    "android-ios-native": "*"
+    "android-ios-native": "*",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=18"

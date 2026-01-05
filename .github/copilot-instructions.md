@@ -88,6 +88,21 @@ adb logcat com.relay.test:I -e "RENDER_SUCCESS|RENDER_VERIFIED"
 # [RENDER_VERIFIED] Correct renderer used: Android
 ```
 
+## Android Live Reload System
+
+### Architecture
+The test app supports live reloading of JSX/TSX files from a local dev server.
+- **Detection**: On initialization, `HookRenderer` checks if the app is debuggable and pings `http://127.0.0.1:8081/status`.
+- **WebSocket**: Listens for `reload` messages on `ws://127.0.0.1:8081`.
+- **Interception**: Intercepts asset reads and redirects to the dev server.
+
+### Usage (CRITICAL)
+To use live reload, you MUST set up an ADB reverse proxy:
+```bash
+adb reverse tcp:8081 tcp:8081
+```
+Then start the dev server in `tests/android/scripts/start-dev.sh` (which runs `dev-server.cjs`).
+
 ## Code Architecture: jscbridge Integration
 
 ### JSCManager Consolidation
